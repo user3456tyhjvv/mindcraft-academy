@@ -121,3 +121,157 @@ html {
         font-size: 0.9rem;
     }
 }
+
+/* Audio Player Enhancements */
+.audio-element {
+    display: none;
+}
+
+.audio-progress {
+    margin-top: 10px;
+    width: 100%;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 5px;
+}
+
+.progress-fill {
+    height: 100%;
+    background: #d4af37;
+    border-radius: 2px;
+    transition: width 0.1s ease;
+    width: 0%;
+}
+
+.time-display {
+    font-size: 0.8rem;
+    opacity: 0.8;
+}
+
+.download-button {
+    width: 40px;
+    height: 40px;
+    background: rgba(212, 175, 55, 0.8);
+    border: none;
+    border-radius: 50%;
+    color: #2c1810;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+}
+
+.download-button:hover {
+    background: #d4af37;
+    transform: scale(1.1);
+}
+
+.player-controls {
+    display: flex;
+    align-items: flex-start;
+    gap: 15px;
+}
+
+.track-info {
+    flex: 1;
+}
+
+/* Video Player Enhancements */
+.video-element {
+    border-radius: 10px;
+    object-fit: cover;
+}
+
+.video-thumbnail {
+    position: relative;
+    overflow: hidden;
+}
+
+/* Premium Modal Styles */
+.premium-feature {
+    background: rgba(212, 175, 55, 0.1);
+    padding: 15px;
+    border-radius: 8px;
+    margin: 10px 0;
+    border-left: 4px solid #d4af37;
+}
+
+/* Time Editor Styles */
+.time-block.editable {
+    border: 2px dashed #d4af37;
+    cursor: pointer;
+}
+
+.time-block.editable:hover {
+    background: linear-gradient(45deg, rgba(212, 175, 55, 0.2), rgba(139, 69, 19, 0.2));
+}
+
+.editing-mode .time-block {
+    position: relative;
+}
+
+.editing-mode .time-block::after {
+    content: '✏️';
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    font-size: 1.2rem;
+}
+
+/* Premium Badge */
+.premium-badge {
+    background: linear-gradient(45deg, #d4af37, #f4e4a6);
+    color: #2c1810;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    margin-left: 8px;
+}
+
+/* Locked Content Overlay */
+.locked-content {
+    position: relative;
+    opacity: 0.6;
+}
+
+.locked-content::before {
+    content: '🔒';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 3rem;
+    z-index: 5;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+/* Progress Tracking Enhancements */
+.streak-counter {
+    background: linear-gradient(45deg, #d4af37, #8b4513);
+    color: white;
+    padding: 10px 15px;
+    border-radius: 20px;
+    text-align: center;
+    margin: 10px 0;
+}
+
+.streak-number {
+    font-size: 2rem;
+    font-weight: bold;
+    display: block;
+}
+
+.streak-label {
+    font-size: 0.9rem;
+    opacity: 0.9;
+}

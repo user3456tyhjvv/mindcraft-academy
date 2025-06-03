@@ -1020,49 +1020,93 @@
                 </div>
 
                 <div class="feature-grid">
-                    <div class="media-player">
+                    <div class="media-player" data-track="productivity">
+                        <audio class="audio-element" preload="metadata">
+                            <source src="https://www.soundjay.com/misc/sounds/bell-ringing-05.wav" type="audio/wav">
+                            <source src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" type="audio/ogg">
+                        </audio>
                         <div class="player-controls">
-                            <button class="play-button" onclick="toggleAudio('productivity')">▶</button>
+                            <button class="play-button" onclick="toggleAudio(this, 'productivity')">▶</button>
                             <div class="track-info">
                                 <div class="track-title">The Productivity Paradox</div>
                                 <div class="track-duration">45 minutes • Narrated by Alex Chen</div>
+                                <div class="audio-progress">
+                                    <div class="progress-bar">
+                                        <div class="progress-fill"></div>
+                                    </div>
+                                    <span class="time-display">0:00 / 45:00</span>
+                                </div>
                             </div>
+                            <button class="download-button" onclick="downloadAudio('productivity')" title="Download">⬇</button>
                         </div>
                         <p style="opacity: 0.9; line-height: 1.5;">Discover why being busy isn't being productive, and
                             learn the counterintuitive strategies that actually move the needle in your life.</p>
                     </div>
 
-                    <div class="media-player">
+                    <div class="media-player" data-track="anxiety">
+                        <audio class="audio-element" preload="metadata">
+                            <source src="https://www.soundjay.com/misc/sounds/bell-ringing-05.wav" type="audio/wav">
+                            <source src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" type="audio/ogg">
+                        </audio>
                         <div class="player-controls">
-                            <button class="play-button" onclick="toggleAudio('anxiety')">▶</button>
+                            <button class="play-button" onclick="toggleAudio(this, 'anxiety')">▶</button>
                             <div class="track-info">
                                 <div class="track-title">Anxiety to Action</div>
                                 <div class="track-duration">38 minutes • Narrated by Dr. Sarah Kim</div>
+                                <div class="audio-progress">
+                                    <div class="progress-bar">
+                                        <div class="progress-fill"></div>
+                                    </div>
+                                    <span class="time-display">0:00 / 38:00</span>
+                                </div>
                             </div>
+                            <button class="download-button" onclick="downloadAudio('anxiety')" title="Download">⬇</button>
                         </div>
                         <p style="opacity: 0.9; line-height: 1.5;">Transform anxious energy into focused power. Real
                             techniques from cognitive behavioral therapy made practical for daily life.</p>
                     </div>
 
-                    <div class="media-player">
+                    <div class="media-player" data-track="habits">
+                        <audio class="audio-element" preload="metadata">
+                            <source src="https://www.soundjay.com/misc/sounds/bell-ringing-05.wav" type="audio/wav">
+                            <source src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" type="audio/ogg">
+                        </audio>
                         <div class="player-controls">
-                            <button class="play-button" onclick="toggleAudio('habits')">▶</button>
+                            <button class="play-button" onclick="toggleAudio(this, 'habits')">▶</button>
                             <div class="track-info">
                                 <div class="track-title">The Habit Revolution</div>
                                 <div class="track-duration">52 minutes • Narrated by Marcus Torres</div>
+                                <div class="audio-progress">
+                                    <div class="progress-bar">
+                                        <div class="progress-fill"></div>
+                                    </div>
+                                    <span class="time-display">0:00 / 52:00</span>
+                                </div>
                             </div>
+                            <button class="download-button" onclick="downloadAudio('habits')" title="Download">⬇</button>
                         </div>
                         <p style="opacity: 0.9; line-height: 1.5;">Why willpower fails and systems succeed. Build habits
                             so strong they become automatic, freeing your mind for higher pursuits.</p>
                     </div>
 
-                    <div class="media-player">
+                    <div class="media-player" data-track="confidence">
+                        <audio class="audio-element" preload="metadata">
+                            <source src="https://www.soundjay.com/misc/sounds/bell-ringing-05.wav" type="audio/wav">
+                            <source src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" type="audio/ogg">
+                        </audio>
                         <div class="player-controls">
-                            <button class="play-button" onclick="toggleAudio('confidence')">▶</button>
+                            <button class="play-button" onclick="toggleAudio(this, 'confidence')">▶</button>
                             <div class="track-info">
                                 <div class="track-title">Unshakeable: Building Real Confidence</div>
                                 <div class="track-duration">41 minutes • Narrated by Emma Rodriguez</div>
+                                <div class="audio-progress">
+                                    <div class="progress-bar">
+                                        <div class="progress-fill"></div>
+                                    </div>
+                                    <span class="time-display">0:00 / 41:00</span>
+                                </div>
                             </div>
+                            <button class="download-button" onclick="downloadAudio('confidence')" title="Download">⬇</button>
                         </div>
                         <p style="opacity: 0.9; line-height: 1.5;">Move beyond fake-it-till-you-make-it to genuine
                             self-assurance. Confidence that comes from competence and character.</p>
@@ -1146,7 +1190,52 @@
                     <h3 class="cta-title">Exclusive Video Series</h3>
                     <p style="color: #5d4e37; margin-bottom: 30px;">Join our premium community for weekly live
                         masterclasses</p>
-                    <button class="cta-button" onclick="alert('Welcome to the inner circle! 📺')">Join Premium</button>
+                    <button class="cta-button" onclick="showPremiumModal()">Join Premium - $10/month</button>
+                </div>
+
+                <!-- Premium Videos Section -->
+                <div id="premiumVideos" style="display: none;">
+                    <h3 style="text-align: center; margin: 40px 0 20px; color: #2c1810; font-family: 'Playfair Display', serif;">🌟 Premium Masterclasses</h3>
+                    <div class="video-gallery">
+                        <div class="video-card">
+                            <div class="video-thumbnail" onclick="playPremiumVideo('advanced-productivity')">
+                                <video class="video-element" width="100%" height="200" controls style="border-radius: 10px;">
+                                    <source src="https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4" type="video/mp4">
+                                    Your browser does not support the video tag.
+                                </video>
+                            </div>
+                            <div class="video-info">
+                                <h4 class="video-title">Advanced Productivity Systems</h4>
+                                <p class="video-description">Master the systems used by Fortune 500 CEOs to manage time and priorities effectively.</p>
+                            </div>
+                        </div>
+
+                        <div class="video-card">
+                            <div class="video-thumbnail" onclick="playPremiumVideo('elite-mindset')">
+                                <video class="video-element" width="100%" height="200" controls style="border-radius: 10px;">
+                                    <source src="https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4" type="video/mp4">
+                                    Your browser does not support the video tag.
+                                </video>
+                            </div>
+                            <div class="video-info">
+                                <h4 class="video-title">Elite Performance Mindset</h4>
+                                <p class="video-description">Develop the mental frameworks used by Olympic athletes and high performers.</p>
+                            </div>
+                        </div>
+
+                        <div class="video-card">
+                            <div class="video-thumbnail" onclick="playPremiumVideo('wealth-building')">
+                                <video class="video-element" width="100%" height="200" controls style="border-radius: 10px;">
+                                    <source src="https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4" type="video/mp4">
+                                    Your browser does not support the video tag.
+                                </video>
+                            </div>
+                            <div class="video-info">
+                                <h4 class="video-title">Wealth Building Foundations</h4>
+                                <p class="video-description">Financial principles every young person needs to know to build generational wealth.</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -1237,6 +1326,11 @@
                         <p style="color: #5d4e37; margin-bottom: 30px;">Small daily disciplines create extraordinary
                             results</p>
                         <button class="cta-button" onclick="saveRoutine()">Lock In My Routine</button>
+                        <div id="editRoutineSection" style="display: none; margin-top: 20px;">
+                            <button class="cta-button" onclick="enableTimeEditing()" style="background: linear-gradient(45deg, #8b4513, #d4af37);">
+                                ✏️ Edit Time Blocks
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1470,6 +1564,71 @@
             <div class="form-footer">
                 <p id="formFooter">Don't have an account? <a onclick="toggleForm('signup')">Sign up</a></p>
             </div>
+        </div>
+    </div>
+
+    <!-- Premium Subscription Modal -->
+    <div class="auth-modal" id="premiumModal">
+        <div class="auth-form" style="max-width: 500px;">
+            <button class="close-modal" onclick="closePremiumModal()">&times;</button>
+            <h2 class="form-title">🌟 Premium Membership</h2>
+            <div style="text-align: center; margin-bottom: 30px;">
+                <div style="font-size: 3rem; color: #d4af37; margin-bottom: 10px;">$10</div>
+                <p style="color: #5d4e37; font-size: 1.1rem;">per month</p>
+            </div>
+            
+            <div style="background: #f9f6f0; padding: 20px; border-radius: 10px; margin-bottom: 25px;">
+                <h4 style="color: #2c1810; margin-bottom: 15px;">Premium Features:</h4>
+                <ul style="color: #5d4e37; line-height: 1.8;">
+                    <li>✅ Access to 25+ premium video masterclasses</li>
+                    <li>✅ Complete audiobook library with downloads</li>
+                    <li>✅ Personalized 1-on-1 coaching sessions</li>
+                    <li>✅ Custom routine builder with time editing</li>
+                    <li>✅ Advanced progress tracking</li>
+                    <li>✅ Priority community support</li>
+                </ul>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 10px; color: #5d4e37; font-weight: 500;">Payment Method</label>
+                <select id="paymentMethod" class="form-input" style="margin-bottom: 15px;">
+                    <option value="card">Credit/Debit Card</option>
+                    <option value="paypal">PayPal</option>
+                </select>
+            </div>
+
+            <button class="form-button" onclick="processPremiumSubscription()">
+                🚀 Upgrade to Premium
+            </button>
+            
+            <p style="text-align: center; margin-top: 15px; font-size: 0.9rem; color: #5d4e37;">
+                Cancel anytime. 30-day money-back guarantee.
+            </p>
+        </div>
+    </div>
+
+    <!-- Time Editor Modal -->
+    <div class="auth-modal" id="timeEditorModal">
+        <div class="auth-form">
+            <button class="close-modal" onclick="closeTimeEditor()">&times;</button>
+            <h2 class="form-title">⏰ Edit Your Time Block</h2>
+            <div class="form-group">
+                <label for="startTime">Start Time</label>
+                <input type="time" id="startTime" class="form-input" required>
+            </div>
+            <div class="form-group">
+                <label for="endTime">End Time</label>
+                <input type="time" id="endTime" class="form-input" required>
+            </div>
+            <div class="form-group">
+                <label for="activityName">Activity</label>
+                <input type="text" id="activityName" class="form-input" placeholder="e.g., Morning Workout" required>
+            </div>
+            <div class="form-group">
+                <label for="activityDescription">Description</label>
+                <input type="text" id="activityDescription" class="form-input" placeholder="Brief description">
+            </div>
+            <button class="form-button" onclick="saveTimeEdit()">Save Changes</button>
         </div>
     </div>
 
