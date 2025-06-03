@@ -1768,11 +1768,16 @@
     <div id="notificationContainer" class="notification-container"></div>
 
     <script>
-        // Supabase will be initialized in script.js
-        // Replace the URL and KEY in script.js with your actual Supabase credentials
+        // Supabase configuration
+        const SUPABASE_URL = 'https://ytqxknpcybvjameqtjpu.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl0cXhrbnBjeWJ2amFtZXF0anB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg5NDIzMjUsImV4cCI6MjA2NDUxODMyNX0.s0Aww5v7NX7aigQ6kFR_rCi9z8FUrwCFb5c9qhCKmhI';
+
+        // Initialize Supabase client
+        let supabaseClient;
 
         // User state
         let currentUser = null;
+        let userSubscription = null;
 
         // DOM Elements
         const authModal = document.getElementById('authModal');
@@ -1786,12 +1791,31 @@
         const profileName = document.getElementById('profileName');
         const profileInitial = document.getElementById('profileInitial');
         const profileMenu = document.getElementById('profileMenu');
-        
+
+        // Initialize Supabase when script loads
+        function initializeSupabase() {
+            try {
+                if (typeof supabase !== 'undefined' && supabase.createClient) {
+                    supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                    console.log('Supabase client initialized successfully');
+                    showNotification('Connected to database!', 'success');
+                } else {
+                    console.warn('Supabase not loaded - some features may not work');
+                    showNotification('Database connection unavailable - some features may be limited', 'warning');
+                }
+            } catch (error) {
+                console.error('Error initializing Supabase:', error);
+                showNotification('Database connection error', 'error');
+            }
+        }
 
         // Initialize the app
         document.addEventListener('DOMContentLoaded', function () {
+            // Initialize Supabase first
+            setTimeout(initializeSupabase, 100);
+            
             // Check for existing session
-            checkSession();
+            setTimeout(checkSession, 200);
 
             // Animate progress bars
             const progressBars = document.querySelectorAll('.habit-progress-fill');
@@ -1816,14 +1840,18 @@
             });
 
             // Profile menu toggle
-            profileContainer.addEventListener('click', function (e) {
-                e.stopPropagation();
-                profileMenu.classList.toggle('active');
-            });
+            if (profileContainer) {
+                profileContainer.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    profileMenu.classList.toggle('active');
+                });
+            }
 
             // Close profile menu when clicking elsewhere
             document.addEventListener('click', function () {
-                profileMenu.classList.remove('active');
+                if (profileMenu) {
+                    profileMenu.classList.remove('active');
+                }
             });
         });
 
@@ -1844,12 +1872,16 @@
             event.target.classList.add('active');
         }
 
-        function toggleAudio(trackName) {
-            const button = event.target;
+        function toggleAudio(button, trackName) {
+            // Ensure trackName is a string
+            if (!trackName || typeof trackName !== 'string') {
+                trackName = 'unknown-track';
+            }
+            
             if (button.innerHTML === '▶') {
                 button.innerHTML = '⏸';
                 button.style.background = '#8b4513';
-                alert(`Now playing: ${trackName.charAt(0).toUpperCase() + trackName.slice(1)} audiobook`);
+                showNotification(`Now playing: ${trackName.charAt(0).toUpperCase() + trackName.slice(1)} audiobook`, 'info');
                 // Simulate playing
                 setTimeout(() => {
                     if (button.innerHTML === '⏸') {
@@ -1860,6 +1892,100 @@
             } else {
                 button.innerHTML = '▶';
                 button.style.background = '#d4af37';
+            }
+        }
+
+        function downloadAudio(trackName) {
+            if (!currentUser) {
+                showNotification('Please log in to download audio files', 'warning');
+                return;
+            }
+
+            // In a real app, this would download the actual audio file
+            const link = document.createElement('a');
+            link.href = `#download-${trackName}`;
+            link.download = `${trackName}.mp3`;
+            
+            showNotification(`Downloading: ${trackName}`, 'success');
+            // Simulate download
+            console.log(`Download initiated for: ${trackName}`);
+        }
+
+        function downloadVideo(videoName) {
+            if (!currentUser) {
+                showNotification('Please log in to download video files', 'warning');
+                return;
+            }
+
+            showNotification(`Downloading: ${videoName}`, 'success');
+            console.log(`Download initiated for: ${videoName}`);
+        }
+
+        function showPremiumModal() {
+            if (!currentUser) {
+                showNotification('Please log in first to subscribe', 'warning');
+                showAuthModal('login');
+                return;
+            }
+            
+            const premiumModal = document.getElementById('premiumModal');
+            if (premiumModal) {
+                premiumModal.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+        }
+
+        function closePremiumModal() {
+            const premiumModal = document.getElementById('premiumModal');
+            if (premiumModal) {
+                premiumModal.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+
+        async function processPremiumSubscription() {
+            const paymentMethod = document.getElementById('paymentMethod').value;
+            
+            try {
+                showNotification('Processing payment...', 'info');
+                
+                // Simulate payment processing
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                if (supabaseClient && currentUser) {
+                    // Update user subscription in Supabase
+                    const { error } = await supabaseClient
+                        .from('profiles')
+                        .update({
+                            subscription_status: 'premium',
+                            subscription_start_date: new Date().toISOString(),
+                            subscription_end_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+                            payment_method: paymentMethod
+                        })
+                        .eq('id', currentUser.id);
+
+                    if (error) throw error;
+                }
+
+                userSubscription = {
+                    status: 'premium',
+                    endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+                };
+
+                showPremiumContent();
+                closePremiumModal();
+                showNotification('🎉 Welcome to Premium! You now have access to all exclusive content!', 'success');
+                
+            } catch (error) {
+                console.error('Payment error:', error);
+                showNotification('Payment failed. Please try again.', 'error');
+            }
+        }
+
+        function showPremiumContent() {
+            const premiumVideos = document.getElementById('premiumVideos');
+            if (premiumVideos) {
+                premiumVideos.style.display = 'block';
             }
         }
 
@@ -1945,137 +2071,171 @@
         async function handleAuthSubmit(event) {
             event.preventDefault();
 
+            if (!supabaseClient) {
+                showNotification('Database connection not available', 'error');
+                return;
+            }
+
             const formType = authForm.dataset.type;
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
 
-            if (formType === 'signup') {
-                const name = document.getElementById('name').value;
-                // Simulate signup
-                const {data, error} = await supabase.auth.signUp({
-                    email: email,
-                    password: password
-                });
+            submitButton.textContent = 'Processing...';
+            submitButton.disabled = true;
 
-                if (error) {
-                    alert(`Error signing up: ${error.message}`);
-                    return;
-                }
-
-                // Create user profile
-                const {error: profileError} = await supabase
-                    .from('profiles')
-                    .insert([
-                        {id: data.user.id, email: email, name: name}
-                    ]);
-
-                if (profileError) {
-                    alert(`Error creating profile: ${profileError.message}`);
-                    return;
-                }
-
-                currentUser = {
-                    id: data.user.id,
-                    email: email,
-                    name: name
-                };
-
-                updateUserUI();
-                closeAuthModal();
-                alert(`🎉 Welcome to MindCraft Academy, ${name}! Your journey begins now.`);
-
-            } else if (formType === 'login') {
-                // Simulate login
-                const {data, error} = await supabase.auth.signInWithPassword({
-                    email: email,
-                    password: password
-                });
-
-                if (error) {
-                    alert(`Error logging in: ${error.message}`);
-                    return;
-                }
-
-                // Get user profile
-                const {data: profile, error: profileError} = await supabase
-                    .from('profiles')
-                    .select('*')
-                    .eq('id', data.user.id)
-                    .single();
-
-                if (profileError) {
-                    alert(`Error loading profile: ${profileError.message}`);
-                    return;
-                }
-
-                currentUser = {
-                    id: data.user.id,
-                    email: profile.email,
-                    name: profile.name
-                };
-
-                updateUserUI();
-                closeAuthModal();
-                alert(`👋 Welcome back, ${profile.name}!`);
-
-            } else if (formType === 'profile') {
-                const name = document.getElementById('name').value;
-                const newPassword = password;
-
-                // Update profile
-                const {error: profileError} = await supabase
-                    .from('profiles')
-                    .update({name: name})
-                    .eq('id', currentUser.id);
-
-                if (profileError) {
-                    alert(`Error updating profile: ${profileError.message}`);
-                    return;
-                }
-
-                // Update password if provided
-                if (newPassword) {
-                    const {error: passwordError} = await supabase.auth.updateUser({
-                        password: newPassword
+            try {
+                if (formType === 'signup') {
+                    const name = document.getElementById('name').value;
+                    
+                    const {data, error} = await supabaseClient.auth.signUp({
+                        email: email,
+                        password: password,
+                        options: {
+                            data: {
+                                name: name
+                            }
+                        }
                     });
 
-                    if (passwordError) {
-                        alert(`Error updating password: ${passwordError.message}`);
+                    if (error) {
+                        showNotification(`Error signing up: ${error.message}`, 'error');
                         return;
                     }
-                }
 
-                currentUser.name = name;
-                updateUserUI();
-                closeAuthModal();
-                alert('✅ Profile updated successfully!');
+                    // Create user profile
+                    const {error: profileError} = await supabaseClient
+                        .from('profiles')
+                        .insert([
+                            {id: data.user.id, email: email, name: name}
+                        ]);
+
+                    if (profileError) {
+                        showNotification(`Error creating profile: ${profileError.message}`, 'error');
+                        return;
+                    }
+
+                    currentUser = {
+                        id: data.user.id,
+                        email: email,
+                        name: name
+                    };
+
+                    updateUserUI();
+                    closeAuthModal();
+                    showNotification(`🎉 Welcome to MindCraft Academy, ${name}! Your journey begins now.`, 'success');
+
+                } else if (formType === 'login') {
+                    const {data, error} = await supabaseClient.auth.signInWithPassword({
+                        email: email,
+                        password: password
+                    });
+
+                    if (error) {
+                        showNotification(`Error logging in: ${error.message}`, 'error');
+                        return;
+                    }
+
+                    // Get user profile
+                    const {data: profile, error: profileError} = await supabaseClient
+                        .from('profiles')
+                        .select('*')
+                        .eq('id', data.user.id)
+                        .single();
+
+                    if (profileError) {
+                        showNotification(`Error loading profile: ${profileError.message}`, 'error');
+                        return;
+                    }
+
+                    currentUser = {
+                        id: data.user.id,
+                        email: profile.email,
+                        name: profile.name
+                    };
+
+                    updateUserUI();
+                    closeAuthModal();
+                    showNotification(`👋 Welcome back, ${profile.name}!`, 'success');
+
+                } else if (formType === 'profile') {
+                    const name = document.getElementById('name').value;
+                    const newPassword = password;
+
+                    // Update profile
+                    const {error: profileError} = await supabaseClient
+                        .from('profiles')
+                        .update({name: name})
+                        .eq('id', currentUser.id);
+
+                    if (profileError) {
+                        showNotification(`Error updating profile: ${profileError.message}`, 'error');
+                        return;
+                    }
+
+                    // Update password if provided
+                    if (newPassword) {
+                        const {error: passwordError} = await supabaseClient.auth.updateUser({
+                            password: newPassword
+                        });
+
+                        if (passwordError) {
+                            showNotification(`Error updating password: ${passwordError.message}`, 'error');
+                            return;
+                        }
+                    }
+
+                    currentUser.name = name;
+                    updateUserUI();
+                    closeAuthModal();
+                    showNotification('✅ Profile updated successfully!', 'success');
+                }
+            } catch (error) {
+                console.error('Auth error:', error);
+                showNotification('Authentication failed. Please try again.', 'error');
+            } finally {
+                submitButton.textContent = formType === 'signup' ? 'Sign Up' : 'Login';
+                submitButton.disabled = false;
             }
         }
 
         async function checkSession() {
-            // Check for existing session
-            const {data, error} = await supabase.auth.getSession();
+            if (!supabaseClient) {
+                console.warn('Supabase not initialized, skipping session check');
+                return;
+            }
 
-            if (data.session) {
-                // User is logged in
-                const {data: profile, error: profileError} = await supabase
-                    .from('profiles')
-                    .select('*')
-                    .eq('id', data.session.user.id)
-                    .single();
+            try {
+                const {data, error} = await supabaseClient.auth.getSession();
 
-                if (profileError) {
-                    console.error('Error loading profile:', profileError.message);
+                if (error) {
+                    console.error('Session error:', error);
                     return;
                 }
 
-                currentUser = {
-                    id: data.session.user.id,
-                    email: profile.email,
-                    name: profile.name
-                };
+                if (data.session) {
+                    // User is logged in
+                    const {data: profile, error: profileError} = await supabaseClient
+                        .from('profiles')
+                        .select('*')
+                        .eq('id', data.session.user.id)
+                        .single();
 
-                updateUserUI();
+                    if (profileError) {
+                        console.error('Error loading profile:', profileError.message);
+                        return;
+                    }
+
+                    currentUser = {
+                        id: data.session.user.id,
+                        email: profile.email,
+                        name: profile.name
+                    };
+
+                    updateUserUI();
+                    showNotification(`Welcome back, ${profile.name}!`, 'success');
+                }
+            } catch (error) {
+                console.error('Error checking session:', error);
             }
         }
 
@@ -2092,16 +2252,76 @@
         }
 
         async function logout() {
-            const {error} = await supabase.auth.signOut();
-            if (error) {
-                alert(`Error logging out: ${error.message}`);
+            if (!supabaseClient) {
+                showNotification('Database connection not available', 'error');
                 return;
             }
 
-            currentUser = null;
-            updateUserUI();
-            alert('👋 You have been logged out successfully.');
-            profileMenu.classList.remove('active');
+            try {
+                const {error} = await supabaseClient.auth.signOut();
+                if (error) {
+                    showNotification(`Error logging out: ${error.message}`, 'error');
+                    return;
+                }
+
+                currentUser = null;
+                userSubscription = null;
+                updateUserUI();
+                showNotification('👋 You have been logged out successfully.', 'success');
+                
+                // Hide premium content
+                const premiumVideos = document.getElementById('premiumVideos');
+                if (premiumVideos) {
+                    premiumVideos.style.display = 'none';
+                }
+                
+                if (profileMenu) {
+                    profileMenu.classList.remove('active');
+                }
+            } catch (error) {
+                console.error('Logout error:', error);
+                showNotification('Logout failed. Please try again.', 'error');
+            }
+        }
+
+        // Notification System
+        function showNotification(message, type = 'info') {
+            let container = document.getElementById('notificationContainer');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'notificationContainer';
+                container.className = 'notification-container';
+                document.body.appendChild(container);
+            }
+
+            const notification = document.createElement('div');
+            notification.className = `notification notification-${type}`;
+            notification.innerHTML = `
+                <div class="notification-content">
+                    <span class="notification-icon">${getNotificationIcon(type)}</span>
+                    <span class="notification-message">${message}</span>
+                    <button class="notification-close" onclick="this.parentElement.parentElement.remove()">×</button>
+                </div>
+            `;
+
+            container.appendChild(notification);
+            setTimeout(() => notification.classList.add('show'), 100);
+
+            setTimeout(() => {
+                if (notification.parentElement) {
+                    notification.classList.remove('show');
+                    setTimeout(() => notification.remove(), 300);
+                }
+            }, 5000);
+        }
+
+        function getNotificationIcon(type) {
+            switch (type) {
+                case 'success': return '✅';
+                case 'error': return '❌';
+                case 'warning': return '⚠️';
+                default: return 'ℹ️';
+            }
         }
 
         function saveCurrentData() {
