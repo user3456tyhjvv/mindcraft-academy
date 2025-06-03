@@ -25,6 +25,10 @@ let userRoutine = [];
 let editingMode = false;
 let currentEditingBlock = null;
 
+// Notification system
+let userNotifications = [];
+let notificationInterval = null;
+
 // Audio tracking
 let currentlyPlaying = null;
 
@@ -262,6 +266,13 @@ async function checkUserSession() {
             currentUser = session.user;
             await initializeUserTables();
             updateUserInterface();
+            
+            // Load and show notifications
+            await loadUserNotifications();
+            
+            // Show welcome notification
+            await addWelcomeNotification();
+            
             showNotification(`Welcome back, ${currentUser.email}!`, 'success');
 
             // Check subscription status
@@ -786,6 +797,221 @@ async function updateDailyProgress(habitName, completed) {
 
             if (error) throw error;
         } else {
+
+
+// Notification System Functions
+async function loadUserNotifications() {
+    if (!currentUser || !supabaseClient) return;
+
+    try {
+        const { data: notifications, error } = await supabaseClient
+            .from('user_notifications')
+            .select('*')
+            .eq('user_id', currentUser.id)
+            .order('created_at', { ascending: false })
+            .limit(20);
+
+        if (error) throw error;
+
+        userNotifications = notifications || [];
+        updateNotificationUI();
+        
+        // Start polling for new notifications
+        if (notificationInterval) clearInterval(notificationInterval);
+        notificationInterval = setInterval(pollForNewNotifications, 30000); // Check every 30 seconds
+        
+    } catch (error) {
+        console.error('Error loading notifications:', error);
+    }
+}
+
+async function pollForNewNotifications() {
+    if (!currentUser || !supabaseClient) return;
+
+    try {
+        const lastCheck = userNotifications.length > 0 ? userNotifications[0].created_at : new Date(0).toISOString();
+        
+        const { data: newNotifications, error } = await supabaseClient
+            .from('user_notifications')
+            .select('*')
+            .eq('user_id', currentUser.id)
+            .gt('created_at', lastCheck)
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        if (newNotifications && newNotifications.length > 0) {
+            userNotifications = [...newNotifications, ...userNotifications];
+            updateNotificationUI();
+            
+            // Show toast notification for new messages
+            showNotification(`You have ${newNotifications.length} new notification(s)`, 'info');
+        }
+    } catch (error) {
+        console.error('Error polling for notifications:', error);
+    }
+}
+
+async function addWelcomeNotification() {
+    if (!currentUser || !supabaseClient) return;
+
+    try {
+        // Check if user already has a welcome notification
+        const { data: existingWelcome, error: checkError } = await supabaseClient
+            .from('user_notifications')
+            .select('id')
+            .eq('user_id', currentUser.id)
+            .ilike('message', '%Welcome to MindCraft Academy%');
+
+        if (checkError) throw checkError;
+
+        if (!existingWelcome || existingWelcome.length === 0) {
+            // Add welcome notification
+            const welcomeNotification = {
+                user_id: currentUser.id,
+                message: `🎉 Welcome to MindCraft Academy! We're excited to have you on your transformation journey. Check out our audio library and start building your perfect daily routine.`,
+                type: 'success',
+                is_read: false,
+                created_at: new Date().toISOString()
+            };
+
+            const { error: insertError } = await supabaseClient
+                .from('user_notifications')
+                .insert([welcomeNotification]);
+
+            if (insertError) throw insertError;
+
+            // Reload notifications to include the welcome message
+            await loadUserNotifications();
+        }
+    } catch (error) {
+        console.error('Error adding welcome notification:', error);
+    }
+}
+
+function updateNotificationUI() {
+    const bell = document.getElementById('notificationBell');
+    const badge = document.getElementById('notificationBadge');
+    const notificationsList = document.getElementById('notificationsList');
+
+    if (!bell || !currentUser) {
+        if (bell) bell.style.display = 'none';
+        return;
+    }
+
+    // Show notification bell when user is logged in
+    bell.style.display = 'flex';
+
+    // Update badge
+    const unreadCount = userNotifications.filter(n => !n.is_read).length;
+    if (unreadCount > 0) {
+        badge.textContent = unreadCount > 9 ? '9+' : unreadCount;
+        badge.style.display = 'flex';
+    } else {
+        badge.style.display = 'none';
+    }
+
+    // Update notifications list
+    if (notificationsList) {
+        if (userNotifications.length === 0) {
+            notificationsList.innerHTML = '<div class="no-notifications">No notifications yet</div>';
+        } else {
+            notificationsList.innerHTML = userNotifications.map(notification => `
+                <div class="notification-item ${notification.is_read ? '' : 'unread'}" onclick="markAsRead('${notification.id}')">
+                    <div class="notification-content">
+                        <span class="notification-icon">${getNotificationIcon(notification.type)}</span>
+                        <div>
+                            <div class="notification-text">${notification.message}</div>
+                            <div class="notification-time">${formatNotificationTime(notification.created_at)}</div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+    }
+}
+
+function toggleNotifications(event) {
+    if (event) event.stopPropagation();
+    
+    const dropdown = document.getElementById('notificationDropdown');
+    dropdown.classList.toggle('active');
+}
+
+async function markAsRead(notificationId) {
+    if (!currentUser || !supabaseClient) return;
+
+    try {
+        const { error } = await supabaseClient
+            .from('user_notifications')
+            .update({ is_read: true })
+            .eq('id', notificationId)
+            .eq('user_id', currentUser.id);
+
+        if (error) throw error;
+
+        // Update local state
+        const notification = userNotifications.find(n => n.id === notificationId);
+        if (notification) {
+            notification.is_read = true;
+            updateNotificationUI();
+        }
+    } catch (error) {
+        console.error('Error marking notification as read:', error);
+    }
+}
+
+async function markAllAsRead() {
+    if (!currentUser || !supabaseClient) return;
+
+    try {
+        const unreadIds = userNotifications.filter(n => !n.is_read).map(n => n.id);
+        
+        if (unreadIds.length === 0) return;
+
+        const { error } = await supabaseClient
+            .from('user_notifications')
+            .update({ is_read: true })
+            .in('id', unreadIds)
+            .eq('user_id', currentUser.id);
+
+        if (error) throw error;
+
+        // Update local state
+        userNotifications.forEach(notification => {
+            notification.is_read = true;
+        });
+        
+        updateNotificationUI();
+        showNotification('All notifications marked as read', 'success');
+    } catch (error) {
+        console.error('Error marking all notifications as read:', error);
+    }
+}
+
+function formatNotificationTime(timestamp) {
+    const now = new Date();
+    const notificationTime = new Date(timestamp);
+    const diffInMinutes = Math.floor((now - notificationTime) / (1000 * 60));
+
+    if (diffInMinutes < 1) return 'Just now';
+    if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
+    if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h ago`;
+    if (diffInMinutes < 10080) return `${Math.floor(diffInMinutes / 1440)}d ago`;
+    
+    return notificationTime.toLocaleDateString();
+}
+
+// Close notification dropdown when clicking outside
+document.addEventListener('click', function(event) {
+    const dropdown = document.getElementById('notificationDropdown');
+    const bell = document.getElementById('notificationBell');
+    
+    if (dropdown && bell && !bell.contains(event.target)) {
+        dropdown.classList.remove('active');
+    }
+});
+
             const { error } = await supabaseClient
                 .from('daily_progress')
                 .insert([progressData]);
@@ -1150,7 +1376,16 @@ async function logout() {
         userSubscription = null;
         userProgress = null;
         userRoutine = [];
+        userNotifications = [];
+        
+        // Clear notification polling
+        if (notificationInterval) {
+            clearInterval(notificationInterval);
+            notificationInterval = null;
+        }
+        
         updateUserInterface();
+        updateNotificationUI();
         showNotification('You have been signed out successfully', 'success');
 
         const profileMenu = document.getElementById('profileMenu');

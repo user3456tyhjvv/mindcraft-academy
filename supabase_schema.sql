@@ -109,6 +109,83 @@ CREATE POLICY "Users can insert own audio progress" ON audio_progress FOR INSERT
 CREATE POLICY "Users can view own video progress" ON video_progress FOR SELECT USING (auth.uid() = user_id);
 CREATE POLICY "Users can insert own video progress" ON video_progress FOR INSERT WITH CHECK (auth.uid() = user_id);
 
+-- Admin management tables
+CREATE TABLE admin_secrets (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    secret TEXT NOT NULL,
+    name TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    is_active BOOLEAN DEFAULT TRUE
+);
+
+-- Admin content management tables
+CREATE TABLE admin_audio_content (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    title TEXT NOT NULL,
+    duration TEXT NOT NULL,
+    narrator TEXT NOT NULL,
+    audio_url TEXT NOT NULL,
+    description TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    created_by TEXT NOT NULL
+);
+
+CREATE TABLE admin_video_content (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    title TEXT NOT NULL,
+    type TEXT NOT NULL CHECK (type IN ('free', 'premium')),
+    icon TEXT NOT NULL,
+    video_url TEXT NOT NULL,
+    description TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    created_by TEXT NOT NULL
+);
+
+CREATE TABLE admin_journey_content (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    title TEXT NOT NULL,
+    icon TEXT NOT NULL,
+    description TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    created_by TEXT NOT NULL
+);
+
+-- Notification system
+CREATE TABLE admin_notifications (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    recipient_type TEXT NOT NULL CHECK (recipient_type IN ('all', 'premium', 'free', 'specific')),
+    recipient_email TEXT,
+    message TEXT NOT NULL,
+    type TEXT NOT NULL CHECK (type IN ('info', 'success', 'warning', 'error')),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    created_by TEXT NOT NULL,
+    is_sent BOOLEAN DEFAULT FALSE,
+    sent_at TIMESTAMP WITH TIME ZONE
+);
+
+CREATE TABLE user_notifications (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+    message TEXT NOT NULL,
+    type TEXT NOT NULL CHECK (type IN ('info', 'success', 'warning', 'error')),
+    is_read BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    admin_notification_id UUID REFERENCES admin_notifications(id)
+);
+
+-- RLS policies for admin tables
+ALTER TABLE admin_secrets ENABLE ROW LEVEL SECURITY;
+ALTER TABLE admin_audio_content ENABLE ROW LEVEL SECURITY;
+ALTER TABLE admin_video_content ENABLE ROW LEVEL SECURITY;
+ALTER TABLE admin_journey_content ENABLE ROW LEVEL SECURITY;
+ALTER TABLE admin_notifications ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_notifications ENABLE ROW LEVEL SECURITY;
+
+-- Note: Admin tables will be accessible through service role key in admin panel
+-- User notifications policy
+CREATE POLICY "Users can view own notifications" ON user_notifications FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can update own notifications" ON user_notifications FOR UPDATE USING (auth.uid() = user_id);
+
 -- Indexes for better performance
 CREATE INDEX idx_profiles_email ON profiles(email);
 CREATE INDEX idx_user_progress_user_id ON user_progress(user_id);
@@ -116,3 +193,6 @@ CREATE INDEX idx_user_routines_user_id ON user_routines(user_id);
 CREATE INDEX idx_daily_progress_user_date ON daily_progress(user_id, date);
 CREATE INDEX idx_audio_progress_user_track ON audio_progress(user_id, track_name);
 CREATE INDEX idx_video_progress_user_video ON video_progress(user_id, video_name);
+CREATE INDEX idx_admin_notifications_recipient ON admin_notifications(recipient_type, recipient_email);
+CREATE INDEX idx_user_notifications_user_read ON user_notifications(user_id, is_read);
+CREATE INDEX idx_admin_secrets_active ON admin_secrets(is_active);
