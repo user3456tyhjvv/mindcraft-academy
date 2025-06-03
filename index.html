@@ -837,29 +837,7 @@
             animation: fadeInUp 0.8s ease-out;
         }
 
-        .supabase-connected {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: rgba(139, 69, 19, 0.9);
-            color: white;
-            padding: 10px 20px;
-            border-radius: 50px;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            z-index: 100;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-        }
-
-        .supabase-connected::before {
-            content: '';
-            width: 10px;
-            height: 10px;
-            background: #4ade80;
-            border-radius: 50%;
-        }
+        
 
         .profile-menu {
             position: absolute;
@@ -1495,8 +1473,7 @@
         </div>
     </div>
 
-    <!-- Supabase Connection Indicator -->
-    <div class="supabase-connected" id="supabaseIndicator">Connected to Supabase</div>
+    
 
     <script>
         // Supabase will be initialized in script.js
@@ -1517,7 +1494,7 @@
         const profileName = document.getElementById('profileName');
         const profileInitial = document.getElementById('profileInitial');
         const profileMenu = document.getElementById('profileMenu');
-        const supabaseIndicator = document.getElementById('supabaseIndicator');
+        
 
         // Initialize the app
         document.addEventListener('DOMContentLoaded', function () {
