@@ -61,7 +61,7 @@ CREATE TABLE audio_progress (
     user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
     track_name TEXT NOT NULL,
     action TEXT NOT NULL, -- 'started', 'paused', 'completed', 'downloaded'
-    current_time FLOAT DEFAULT 0,
+    "current_time" DEFAULT 0,
     timestamp TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
@@ -71,7 +71,7 @@ CREATE TABLE video_progress (
     user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
     video_name TEXT NOT NULL,
     action TEXT NOT NULL, -- 'started', 'paused', 'completed'
-    current_time FLOAT DEFAULT 0,
+    "current_time" DEFAULT 0,
     timestamp TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
