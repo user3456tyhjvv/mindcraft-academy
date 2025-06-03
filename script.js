@@ -1192,9 +1192,17 @@ async function handleAuthSubmit(event) {
                 }
 
                 currentUser = data.user;
+                
+                // Load or create user profile
                 await loadOrCreateUserProfile();
+                
                 updateUserInterface();
                 closeAuthModal();
+                
+                // Load user notifications and data
+                await loadUserNotifications();
+                await addWelcomeNotification();
+                
                 showNotification(`Welcome back!`, 'success');
             }
         } else if (formType === 'forgot-password') {
@@ -1301,37 +1309,32 @@ async function loadOrCreateUserProfile() {
     if (!currentUser) return;
 
     try {
-        const { data: profiles, error } = await supabaseClient
+        const { data: profile, error } = await supabaseClient
             .from('profiles')
             .select('*')
-            .eq('id', currentUser.id);
+            .eq('id', currentUser.id)
+            .maybeSingle();
 
-        if (error) {
+        if (error && error.code !== 'PGRST116') {
             throw error;
         }
 
-        if (!profiles || profiles.length === 0) {
+        if (!profile) {
             // Create profile if it doesn't exist
-            await createUserProfile(currentUser.user_metadata?.name, currentUser.email);
+            console.log('No profile found, creating new profile...');
+            await createUserProfile(
+                currentUser.user_metadata?.name || currentUser.email?.split('@')[0],
+                currentUser.email
+            );
         } else {
-            // Use existing profile data (take the first one if multiple exist)
-            const profile = profiles[0];
             console.log('Existing profile loaded:', profile);
-            
-            // If multiple profiles exist, clean up duplicates
-            if (profiles.length > 1) {
-                console.warn('Multiple profiles found, cleaning up duplicates');
-                for (let i = 1; i < profiles.length; i++) {
-                    await supabaseClient
-                        .from('profiles')
-                        .delete()
-                        .eq('id', profiles[i].id);
-                }
-            }
         }
+
+        // Initialize other user data
+        await initializeUserTables();
     } catch (error) {
         console.error('Error loading/creating profile:', error);
-        showNotification('Failed to load or create profile', 'error');
+        showNotification('Failed to load profile: ' + error.message, 'error');
     }
 }
 
@@ -1339,6 +1342,23 @@ async function createUserProfile(name, email) {
     if (!currentUser) return;
 
     try {
+        // First check if profile already exists
+        const { data: existingProfile, error: checkError } = await supabaseClient
+            .from('profiles')
+            .select('id')
+            .eq('id', currentUser.id)
+            .maybeSingle();
+
+        if (checkError && checkError.code !== 'PGRST116') {
+            throw checkError;
+        }
+
+        if (existingProfile) {
+            console.log('Profile already exists for user:', currentUser.id);
+            return;
+        }
+
+        // Create new profile
         const { error } = await supabaseClient
             .from('profiles')
             .insert([
@@ -1357,9 +1377,10 @@ async function createUserProfile(name, email) {
         }
 
         console.log('New profile created for user:', currentUser.id);
+        showNotification('Profile created successfully!', 'success');
     } catch (error) {
         console.error('Error creating profile:', error);
-        showNotification('Failed to create profile', 'error');
+        showNotification('Failed to create profile: ' + error.message, 'error');
     }
 }
 

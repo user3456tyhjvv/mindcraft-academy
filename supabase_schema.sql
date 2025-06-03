@@ -9,7 +9,10 @@ CREATE TABLE profiles (
     subscription_start_date TIMESTAMP WITH TIME ZONE,
     subscription_end_date TIMESTAMP WITH TIME ZONE,
     payment_method TEXT,
-    join_date TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    join_date TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    totp_secret TEXT,
+    totp_enabled BOOLEAN DEFAULT FALSE,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 -- User progress tracking table

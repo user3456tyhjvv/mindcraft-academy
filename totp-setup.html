@@ -1,0 +1,441 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Setup Two-Factor Authentication - MindCraft Academy</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.3/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Inter:wght@300;400;500;600;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #333;
+        }
+
+        .container {
+            background: #faf7f2;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            border: 3px solid #d4af37;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .title {
+            font-family: 'Playfair Display', serif;
+            font-size: 2rem;
+            color: #2c1810;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #5d4e37;
+            font-size: 1.1rem;
+            line-height: 1.5;
+        }
+
+        .setup-step {
+            margin: 30px 0;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            border-left: 4px solid #d4af37;
+        }
+
+        .step-number {
+            background: #d4af37;
+            color: #2c1810;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .step-title {
+            font-weight: 600;
+            color: #2c1810;
+            margin-bottom: 10px;
+        }
+
+        .step-description {
+            color: #5d4e37;
+            line-height: 1.5;
+            margin-bottom: 15px;
+        }
+
+        .qr-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .secret-key {
+            background: rgba(212, 175, 55, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            color: #2c1810;
+            border: 1px solid #d4af37;
+            word-break: break-all;
+            margin: 15px 0;
+        }
+
+        .form-group {
+            margin: 20px 0;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            color: #5d4e37;
+            font-weight: 500;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #e8dcc6;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            text-align: center;
+            font-weight: bold;
+            letter-spacing: 3px;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #d4af37;
+            box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.3);
+        }
+
+        .button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(45deg, #d4af37, #8b4513);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(212, 175, 55, 0.4);
+        }
+
+        .button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid #c3e6cb;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid #f5c6cb;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .app-links {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .app-link {
+            padding: 10px;
+            background: #e8dcc6;
+            border-radius: 8px;
+            text-align: center;
+            text-decoration: none;
+            color: #2c1810;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .app-link:hover {
+            background: #d4af37;
+            color: white;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+                margin: 20px;
+            }
+
+            .title {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 class="title">🔐 Setup Two-Factor Authentication</h1>
+            <p class="subtitle">Secure your MindCraft Academy account with an additional layer of protection</p>
+        </div>
+
+        <div id="setupSteps">
+            <div class="setup-step">
+                <div class="step-number">1</div>
+                <h3 class="step-title">Install an Authenticator App</h3>
+                <p class="step-description">Download one of these apps on your mobile device:</p>
+                <div class="app-links">
+                    <a href="https://apps.apple.com/app/google-authenticator/id388497605" class="app-link" target="_blank">Google Authenticator</a>
+                    <a href="https://www.microsoft.com/en-us/account/authenticator" class="app-link" target="_blank">Microsoft Authenticator</a>
+                    <a href="https://authy.com/download/" class="app-link" target="_blank">Authy</a>
+                </div>
+            </div>
+
+            <div class="setup-step">
+                <div class="step-number">2</div>
+                <h3 class="step-title">Scan QR Code</h3>
+                <p class="step-description">Open your authenticator app and scan this QR code:</p>
+                <div class="qr-container">
+                    <canvas id="qrcode" style="border: 2px solid #d4af37; border-radius: 10px;"></canvas>
+                </div>
+                <p class="step-description">Can't scan? Enter this secret key manually:</p>
+                <div class="secret-key" id="secretKey">Loading...</div>
+            </div>
+
+            <div class="setup-step">
+                <div class="step-number">3</div>
+                <h3 class="step-title">Verify Setup</h3>
+                <p class="step-description">Enter the 6-digit code from your authenticator app:</p>
+                <div class="form-group">
+                    <label class="form-label" for="verificationCode">Verification Code</label>
+                    <input type="text" id="verificationCode" class="form-input" placeholder="000000" maxlength="6" pattern="[0-9]{6}">
+                </div>
+                <button class="button" onclick="verifySetup()">Verify & Enable 2FA</button>
+            </div>
+        </div>
+
+        <div id="successMessage" class="hidden">
+            <div class="success-message">
+                <h3>🎉 Two-Factor Authentication Enabled!</h3>
+                <p>Your account is now secured with 2FA. You'll need your authenticator app to log in from now on.</p>
+                <button class="button" onclick="window.location.href='/'">Return to MindCraft Academy</button>
+            </div>
+        </div>
+
+        <div id="errorMessage" class="hidden">
+            <div class="error-message">
+                <p id="errorText">An error occurred. Please try again.</p>
+                <button class="button" onclick="location.reload()">Try Again</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://ytqxknpcybvjameqtjpu.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl0cXhrbnBjeWJ2amFtZXF0anB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg5NDIzMjUsImV4cCI6MjA2NDUxODMyNX0.s0Aww5v7NX7aigQ6kFR_rCi9z8FUrwCFb5c9qhCKmhI';
+
+        let supabaseClient;
+        let currentUser = null;
+        let totpSecret = '';
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            checkUserSession();
+        });
+
+        async function checkUserSession() {
+            try {
+                const { data: { session }, error } = await supabaseClient.auth.getSession();
+                
+                if (error) throw error;
+                
+                if (!session) {
+                    window.location.href = '/';
+                    return;
+                }
+
+                currentUser = session.user;
+                generateTOTPSecret();
+            } catch (error) {
+                console.error('Session error:', error);
+                showError('Authentication required. Redirecting...');
+                setTimeout(() => window.location.href = '/', 2000);
+            }
+        }
+
+        function generateTOTPSecret() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+            let secret = '';
+            for (let i = 0; i < 32; i++) {
+                secret += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            
+            totpSecret = secret;
+            document.getElementById('secretKey').textContent = secret;
+            
+            // Generate QR code
+            const serviceName = 'MindCraft Academy';
+            const accountName = currentUser.email;
+            const qrData = `otpauth://totp/${serviceName}:${accountName}?secret=${secret}&issuer=${serviceName}`;
+            
+            QRCode.toCanvas(document.getElementById('qrcode'), qrData, {
+                width: 200,
+                margin: 2,
+                color: {
+                    dark: '#2c1810',
+                    light: '#faf7f2'
+                }
+            }, function(error) {
+                if (error) console.error('QR Code generation error:', error);
+            });
+        }
+
+        function generateTOTP(secret, window = 0) {
+            const epoch = Math.round(new Date().getTime() / 1000.0);
+            const time = Math.floor(epoch / 30) + window;
+            
+            const timeHex = time.toString(16).padStart(16, '0');
+            const key = base32Decode(secret);
+            
+            // Simple HMAC-SHA1 implementation using crypto-js
+            const timeBuffer = CryptoJS.enc.Hex.parse(timeHex);
+            const keyBuffer = CryptoJS.enc.Hex.parse(Array.from(key).map(b => b.toString(16).padStart(2, '0')).join(''));
+            const hmac = CryptoJS.HmacSHA1(timeBuffer, keyBuffer);
+            
+            const hmacHex = hmac.toString(CryptoJS.enc.Hex);
+            const offset = parseInt(hmacHex.slice(-1), 16);
+            const otp = ((parseInt(hmacHex.substr(offset * 2, 8), 16) & 0x7fffffff) % 1000000).toString().padStart(6, '0');
+            
+            return otp;
+        }
+
+        function base32Decode(encoded) {
+            const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+            let bits = '';
+            let value = 0;
+            let bytes = [];
+            
+            for (let i = 0; i < encoded.length; i++) {
+                const index = alphabet.indexOf(encoded[i].toUpperCase());
+                if (index === -1) continue;
+                
+                value = (value << 5) | index;
+                bits += 5;
+                
+                if (bits >= 8) {
+                    bytes.push((value >>> (bits - 8)) & 255);
+                    bits -= 8;
+                }
+            }
+            
+            return new Uint8Array(bytes);
+        }
+
+        function verifyTOTP(token, secret) {
+            // Check current window and ±1 window for clock skew
+            for (let window = -1; window <= 1; window++) {
+                if (generateTOTP(secret, window) === token) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        async function verifySetup() {
+            const code = document.getElementById('verificationCode').value;
+            
+            if (code.length !== 6 || !/^\d{6}$/.test(code)) {
+                showError('Please enter a valid 6-digit code');
+                return;
+            }
+
+            if (!verifyTOTP(code, totpSecret)) {
+                showError('Invalid code. Please check your authenticator app and try again.');
+                return;
+            }
+
+            try {
+                // Save TOTP secret to user profile
+                const { error } = await supabaseClient
+                    .from('profiles')
+                    .update({
+                        totp_secret: totpSecret,
+                        totp_enabled: true,
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('id', currentUser.id);
+
+                if (error) throw error;
+
+                // Show success
+                document.getElementById('setupSteps').classList.add('hidden');
+                document.getElementById('successMessage').classList.remove('hidden');
+                
+            } catch (error) {
+                console.error('Error saving TOTP secret:', error);
+                showError('Failed to enable 2FA. Please try again.');
+            }
+        }
+
+        function showError(message) {
+            document.getElementById('errorText').textContent = message;
+            document.getElementById('errorMessage').classList.remove('hidden');
+            setTimeout(() => {
+                document.getElementById('errorMessage').classList.add('hidden');
+            }, 5000);
+        }
+
+        // Format input as user types
+        document.getElementById('verificationCode').addEventListener('input', function(e) {
+            e.target.value = e.target.value.replace(/\D/g, '');
+        });
+    </script>
+</body>
+</html>
