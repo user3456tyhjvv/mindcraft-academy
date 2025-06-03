@@ -222,8 +222,10 @@ function toggleAudio(button, trackName) {
         currentlyPlaying = audio;
         
         // Track in Supabase
-        trackAudioProgress(trackName, 'started');
-        showNotification(`Now playing: ${trackName.charAt(0).toUpperCase() + trackName.slice(1)}`, 'info');
+        if (trackName && typeof trackName === 'string') {
+            trackAudioProgress(trackName, 'started');
+            showNotification(`Now playing: ${trackName.charAt(0).toUpperCase() + trackName.slice(1)}`, 'info');
+        }
     } else {
         audio.pause();
         button.innerHTML = '▶';
@@ -231,7 +233,9 @@ function toggleAudio(button, trackName) {
         currentlyPlaying = null;
         
         // Track pause in Supabase
-        trackAudioProgress(trackName, 'paused', audio.currentTime);
+        if (trackName && typeof trackName === 'string') {
+            trackAudioProgress(trackName, 'paused', audio.currentTime);
+        }
     }
 }
 
@@ -265,8 +269,10 @@ function onAudioEnded(event) {
     
     resetAudioUI(audio);
     const trackName = mediaPlayer.dataset.track;
-    trackAudioProgress(trackName, 'completed', audio.duration);
-    showNotification(`Completed: ${trackName}`, 'success');
+    if (trackName) {
+        trackAudioProgress(trackName, 'completed', audio.duration);
+        showNotification(`Completed: ${trackName.charAt(0).toUpperCase() + trackName.slice(1)}`, 'success');
+    }
 }
 
 function resetAudioUI(audio) {
@@ -840,9 +846,12 @@ async function logout() {
 
 // Notification System
 function showNotification(message, type = 'info') {
-    const existingNotification = document.querySelector('.notification');
-    if (existingNotification) {
-        existingNotification.remove();
+    let container = document.getElementById('notificationContainer');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'notificationContainer';
+        container.className = 'notification-container';
+        document.body.appendChild(container);
     }
 
     const notification = document.createElement('div');
@@ -855,7 +864,7 @@ function showNotification(message, type = 'info') {
         </div>
     `;
 
-    document.body.appendChild(notification);
+    container.appendChild(notification);
     setTimeout(() => notification.classList.add('show'), 100);
 
     setTimeout(() => {
