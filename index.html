@@ -868,6 +868,101 @@
             color: #2c1810;
         }
 
+        /* Email Confirmation Notification */
+        .email-confirmation-notification {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .email-confirmation-notification.show {
+            opacity: 1;
+        }
+
+        .email-confirmation-content {
+            background: #faf7f2;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+            border: 3px solid #d4af37;
+        }
+
+        .email-confirmation-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
+
+        .email-confirmation-content h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2rem;
+            color: #2c1810;
+            margin-bottom: 15px;
+        }
+
+        .email-confirmation-content p {
+            color: #5d4e37;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .email-address {
+            background: rgba(212, 175, 55, 0.1);
+            padding: 10px;
+            border-radius: 10px;
+            font-weight: 600;
+            color: #2c1810 !important;
+            border: 1px solid #d4af37;
+        }
+
+        .email-confirmation-actions {
+            margin-top: 30px;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .email-confirm-btn, .resend-email-btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .email-confirm-btn {
+            background: linear-gradient(45deg, #d4af37, #8b4513);
+            color: white;
+        }
+
+        .email-confirm-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(212, 175, 55, 0.4);
+        }
+
+        .resend-email-btn {
+            background: #e8dcc6;
+            color: #2c1810;
+            border: 2px solid #d4af37;
+        }
+
+        .resend-email-btn:hover {
+            background: #d4af37;
+            color: white;
+        }
+
         /* Notification System */
         .notification-container {
             position: fixed;

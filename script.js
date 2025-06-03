@@ -36,6 +36,13 @@ document.addEventListener('DOMContentLoaded', function() {
             if (typeof supabase !== 'undefined' && supabase.createClient) {
                 supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
                 console.log('Supabase initialized successfully');
+                
+                // Handle email confirmation redirect
+                handleEmailConfirmation();
+                
+                // Handle password reset redirect
+                handlePasswordReset();
+                
                 checkUserSession();
                 setupAudioPlayers();
                 showNotification('Welcome to MindCraft Academy!', 'success');
@@ -49,6 +56,93 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }, 100);
 });
+
+// Handle email confirmation from URL parameters
+async function handleEmailConfirmation() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const accessToken = urlParams.get('access_token');
+    const refreshToken = urlParams.get('refresh_token');
+    const type = urlParams.get('type');
+
+    if (type === 'signup' && accessToken && refreshToken) {
+        try {
+            const { data, error } = await supabaseClient.auth.setSession({
+                access_token: accessToken,
+                refresh_token: refreshToken
+            });
+
+            if (error) throw error;
+
+            // Create user profile after email confirmation
+            if (data.user) {
+                currentUser = data.user;
+                await createUserProfile(
+                    data.user.user_metadata?.name || data.user.email.split('@')[0],
+                    data.user.email
+                );
+                updateUserInterface();
+                showNotification('🎉 Email confirmed! Welcome to MindCraft Academy!', 'success');
+                
+                // Clean up URL
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+        } catch (error) {
+            console.error('Email confirmation error:', error);
+            showNotification('Email confirmation failed. Please try logging in.', 'error');
+        }
+    }
+}
+
+// Handle password reset from URL parameters
+async function handlePasswordReset() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const accessToken = urlParams.get('access_token');
+    const refreshToken = urlParams.get('refresh_token');
+    const type = urlParams.get('type');
+
+    if (type === 'recovery' && accessToken && refreshToken) {
+        try {
+            const { data, error } = await supabaseClient.auth.setSession({
+                access_token: accessToken,
+                refresh_token: refreshToken
+            });
+
+            if (error) throw error;
+
+            // Show password reset form
+            showPasswordResetModal();
+            
+            // Clean up URL
+            window.history.replaceState({}, document.title, window.location.pathname);
+        } catch (error) {
+            console.error('Password reset error:', error);
+            showNotification('Password reset link is invalid or expired.', 'error');
+        }
+    }
+}
+
+function showPasswordResetModal() {
+    const authModal = document.getElementById('authModal');
+    const formTitle = document.getElementById('formTitle');
+    const submitButton = document.getElementById('submitButton');
+    const formFooter = document.getElementById('formFooter');
+    const nameGroup = document.getElementById('nameGroup');
+    const authForm = document.getElementById('authForm');
+    const emailGroup = document.querySelector('#email').parentElement;
+
+    authModal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+
+    formTitle.textContent = 'Set New Password';
+    submitButton.textContent = 'Update Password';
+    formFooter.innerHTML = '';
+    nameGroup.style.display = 'none';
+    emailGroup.style.display = 'none';
+    authForm.dataset.type = 'reset-password';
+    
+    // Change password field placeholder
+    document.getElementById('password').placeholder = 'Enter your new password';
+}
 
 // Supabase Database Setup Functions
 async function initializeUserTables() {
@@ -772,14 +866,22 @@ function showAuthModal(type) {
     const formFooter = document.getElementById('formFooter');
     const nameGroup = document.getElementById('nameGroup');
     const authForm = document.getElementById('authForm');
+    const passwordGroup = document.querySelector('#password').parentElement;
 
     authModal.classList.add('active');
     document.body.style.overflow = 'hidden';
 
+    // Reset visibility for all form groups
+    nameGroup.style.display = 'none';
+    passwordGroup.style.display = 'block';
+
     if (type === 'login') {
         formTitle.textContent = 'Welcome Back';
         submitButton.textContent = 'Sign In';
-        formFooter.innerHTML = 'Don\'t have an account? <a onclick="toggleForm(\'signup\')">Sign up</a>';
+        formFooter.innerHTML = `
+            Don't have an account? <a onclick="toggleForm('signup')">Sign up</a><br>
+            <a onclick="showForgotPasswordModal()" style="font-size: 0.9rem; color: #8b4513; margin-top: 10px; display: block;">Forgot your password?</a>
+        `;
         nameGroup.style.display = 'none';
         authForm.dataset.type = 'login';
     } else if (type === 'signup') {
@@ -831,7 +933,8 @@ async function handleAuthSubmit(event) {
                 options: {
                     data: {
                         name: name
-                    }
+                    },
+                    emailRedirectTo: `${window.location.origin}/email-confirmed`
                 }
             });
 
@@ -841,11 +944,8 @@ async function handleAuthSubmit(event) {
             }
 
             if (data.user) {
-                currentUser = data.user;
-                await createUserProfile(name, email);
-                updateUserInterface();
                 closeAuthModal();
-                showNotification(`Welcome to MindCraft Academy, ${name}! Please check your email to verify your account.`, 'success');
+                showEmailConfirmationNotification(email);
             }
         } else if (formType === 'login') {
             const { data, error } = await supabaseClient.auth.signInWithPassword({
@@ -859,12 +959,45 @@ async function handleAuthSubmit(event) {
             }
 
             if (data.user) {
+                // Check if email is confirmed
+                if (!data.user.email_confirmed_at) {
+                    showNotification('Please check your email and confirm your account before logging in.', 'warning');
+                    return;
+                }
+
                 currentUser = data.user;
                 await loadOrCreateUserProfile();
                 updateUserInterface();
                 closeAuthModal();
                 showNotification(`Welcome back!`, 'success');
             }
+        } else if (formType === 'forgot-password') {
+            const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+                redirectTo: `${window.location.origin}/reset-password`
+            });
+
+            if (error) {
+                showNotification(error.message, 'error');
+                return;
+            }
+
+            closeAuthModal();
+            showNotification('Password reset email sent! Check your inbox.', 'success');
+        } else if (formType === 'reset-password') {
+            const newPassword = password;
+            const { error } = await supabaseClient.auth.updateUser({
+                password: newPassword
+            });
+
+            if (error) {
+                showNotification(error.message, 'error');
+                return;
+            }
+
+            showNotification('Password updated successfully! You can now log in with your new password.', 'success');
+            setTimeout(() => {
+                window.location.href = '/';
+            }, 2000);
         }
     } catch (error) {
         console.error('Auth error:', error);
@@ -873,6 +1006,69 @@ async function handleAuthSubmit(event) {
         submitButton.textContent = originalText;
         submitButton.disabled = false;
     }
+}
+
+function showEmailConfirmationNotification(email) {
+    const notification = document.createElement('div');
+    notification.className = 'email-confirmation-notification';
+    notification.innerHTML = `
+        <div class="email-confirmation-content">
+            <div class="email-confirmation-icon">📧</div>
+            <h3>Check Your Email!</h3>
+            <p>We've sent a confirmation link to:</p>
+            <p class="email-address">${email}</p>
+            <p>Click the link in your email to activate your account and start your transformation journey!</p>
+            <div class="email-confirmation-actions">
+                <button onclick="this.parentElement.parentElement.parentElement.remove()" class="email-confirm-btn">Got it!</button>
+                <button onclick="resendConfirmationEmail('${email}')" class="resend-email-btn">Resend Email</button>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(notification);
+    setTimeout(() => notification.classList.add('show'), 100);
+}
+
+async function resendConfirmationEmail(email) {
+    try {
+        const { error } = await supabaseClient.auth.resend({
+            type: 'signup',
+            email: email,
+            options: {
+                emailRedirectTo: `${window.location.origin}/email-confirmed`
+            }
+        });
+
+        if (error) {
+            showNotification(error.message, 'error');
+            return;
+        }
+
+        showNotification('Confirmation email resent!', 'success');
+    } catch (error) {
+        console.error('Error resending email:', error);
+        showNotification('Failed to resend email. Please try again.', 'error');
+    }
+}
+
+function showForgotPasswordModal() {
+    const authModal = document.getElementById('authModal');
+    const formTitle = document.getElementById('formTitle');
+    const submitButton = document.getElementById('submitButton');
+    const formFooter = document.getElementById('formFooter');
+    const nameGroup = document.getElementById('nameGroup');
+    const authForm = document.getElementById('authForm');
+    const passwordGroup = document.querySelector('#password').parentElement;
+
+    authModal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+
+    formTitle.textContent = 'Reset Your Password';
+    submitButton.textContent = 'Send Reset Email';
+    formFooter.innerHTML = 'Remember your password? <a onclick="toggleForm(\'login\')">Sign in</a>';
+    nameGroup.style.display = 'none';
+    passwordGroup.style.display = 'none';
+    authForm.dataset.type = 'forgot-password';
 }
 
 async function loadOrCreateUserProfile() {
