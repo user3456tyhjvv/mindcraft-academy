@@ -246,6 +246,35 @@ html {
     margin-left: 8px;
 }
 
+/* Premium Content Styling */
+.premium-content {
+    border: 2px solid #d4af37;
+    border-radius: 15px;
+    background: linear-gradient(135deg, rgba(212, 175, 55, 0.1), rgba(139, 69, 19, 0.05));
+    padding: 20px;
+    margin: 20px 0;
+}
+
+.premium-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.premium-icon {
+    font-size: 1.5rem;
+    color: #d4af37;
+}
+
+.coach-feature {
+    background: rgba(212, 175, 55, 0.1);
+    border-left: 4px solid #d4af37;
+    padding: 15px;
+    margin: 15px 0;
+    border-radius: 8px;
+}
+
 /* Locked Content Overlay */
 .locked-content {
     position: relative;

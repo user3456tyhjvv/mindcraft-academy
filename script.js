@@ -6,6 +6,13 @@ const SUPABASE_ANON_KEY = 'your-anon-key';
 // Initialize Supabase client
 let supabaseClient;
 
+// Initialize Supabase when the script loads
+if (typeof supabase !== 'undefined') {
+    supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+} else {
+    console.warn('Supabase not loaded - some features may not work');
+}
+
 // User session management
 let currentUser = null;
 let userSubscription = null;
@@ -124,6 +131,11 @@ async function loadUserRoutine() {
 
 // User session management
 async function checkUserSession() {
+    if (!supabaseClient) {
+        console.warn('Supabase not initialized');
+        return;
+    }
+    
     try {
         const { data: { session }, error } = await supabaseClient.auth.getSession();
         
@@ -143,6 +155,7 @@ async function checkUserSession() {
         }
     } catch (error) {
         console.error('Error checking session:', error);
+        showNotification('Session check failed', 'warning');
     }
 }
 
@@ -209,6 +222,11 @@ function setupAudioPlayers() {
 function toggleAudio(button, trackName) {
     const mediaPlayer = button.closest('.media-player');
     const audio = mediaPlayer.querySelector('.audio-element');
+    
+    // Get track name from data attribute if not provided
+    if (!trackName) {
+        trackName = mediaPlayer.dataset.track || 'unknown';
+    }
     
     if (currentlyPlaying && currentlyPlaying !== audio) {
         currentlyPlaying.pause();
