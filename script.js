@@ -1,4 +1,3 @@
-
 // Supabase configuration - Replace with your actual credentials
 const SUPABASE_URL = 'https://ytqxknpcybvjameqtjpu.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl0cXhrbnBjeWJ2amFtZXF0anB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg5NDIzMjUsImV4cCI6MjA2NDUxODMyNX0.s0Aww5v7NX7aigQ6kFR_rCi9z8FUrwCFb5c9qhCKmhI';
@@ -81,7 +80,7 @@ async function initializeUserTables() {
 
         // Initialize progress tracking
         await initializeUserProgress();
-        
+
         // Load user routine
         await loadUserRoutine();
 
@@ -150,10 +149,10 @@ async function checkUserSession() {
         showNotification('Database connection not available', 'warning');
         return;
     }
-    
+
     try {
         const { data: { session }, error } = await supabaseClient.auth.getSession();
-        
+
         if (error) {
             console.error('Session error:', error);
             return;
@@ -164,7 +163,7 @@ async function checkUserSession() {
             await initializeUserTables();
             updateUserInterface();
             showNotification(`Welcome back, ${currentUser.email}!`, 'success');
-            
+
             // Check subscription status
             await checkSubscriptionStatus();
         }
@@ -207,7 +206,7 @@ function updateUserInterface() {
     if (currentUser) {
         authButtons.style.display = 'none';
         profileContainer.style.display = 'flex';
-        
+
         const displayName = currentUser.user_metadata?.name || currentUser.email.split('@')[0];
         profileName.textContent = displayName;
         profileInitial.textContent = displayName.charAt(0).toUpperCase();
@@ -226,7 +225,7 @@ function updateUserInterface() {
 // Audio Player Functions
 function setupAudioPlayers() {
     const audioElements = document.querySelectorAll('.audio-element');
-    
+
     audioElements.forEach(audio => {
         audio.addEventListener('timeupdate', updateProgress);
         audio.addEventListener('ended', onAudioEnded);
@@ -237,12 +236,12 @@ function setupAudioPlayers() {
 function toggleAudio(button, trackName) {
     const mediaPlayer = button.closest('.media-player');
     const audio = mediaPlayer.querySelector('.audio-element');
-    
+
     // Get track name from data attribute if not provided
     if (!trackName || typeof trackName !== 'string') {
         trackName = mediaPlayer.dataset.track || 'unknown-track';
     }
-    
+
     if (currentlyPlaying && currentlyPlaying !== audio) {
         currentlyPlaying.pause();
         resetAudioUI(currentlyPlaying);
@@ -256,7 +255,7 @@ function toggleAudio(button, trackName) {
         button.innerHTML = '⏸';
         button.style.background = '#8b4513';
         currentlyPlaying = audio;
-        
+
         // Track in Supabase
         if (trackName && typeof trackName === 'string') {
             trackAudioProgress(trackName, 'started');
@@ -267,7 +266,7 @@ function toggleAudio(button, trackName) {
         button.innerHTML = '▶';
         button.style.background = '#d4af37';
         currentlyPlaying = null;
-        
+
         // Track pause in Supabase
         if (trackName && typeof trackName === 'string') {
             trackAudioProgress(trackName, 'paused', audio.currentTime);
@@ -280,10 +279,10 @@ function updateProgress(event) {
     const mediaPlayer = audio.closest('.media-player');
     const progressFill = mediaPlayer.querySelector('.progress-fill');
     const timeDisplay = mediaPlayer.querySelector('.time-display');
-    
+
     const progress = (audio.currentTime / audio.duration) * 100;
     progressFill.style.width = progress + '%';
-    
+
     const currentTime = formatTime(audio.currentTime);
     const duration = formatTime(audio.duration);
     timeDisplay.textContent = `${currentTime} / ${duration}`;
@@ -293,7 +292,7 @@ function updateDuration(event) {
     const audio = event.target;
     const mediaPlayer = audio.closest('.media-player');
     const timeDisplay = mediaPlayer.querySelector('.time-display');
-    
+
     const duration = formatTime(audio.duration);
     timeDisplay.textContent = `0:00 / ${duration}`;
 }
@@ -302,7 +301,7 @@ function onAudioEnded(event) {
     const audio = event.target;
     const mediaPlayer = audio.closest('.media-player');
     const playButton = mediaPlayer.querySelector('.play-button');
-    
+
     resetAudioUI(audio);
     const trackName = mediaPlayer.dataset.track;
     if (trackName) {
@@ -315,7 +314,7 @@ function resetAudioUI(audio) {
     const mediaPlayer = audio.closest('.media-player');
     const playButton = mediaPlayer.querySelector('.play-button');
     const progressFill = mediaPlayer.querySelector('.progress-fill');
-    
+
     playButton.innerHTML = '▶';
     playButton.style.background = '#d4af37';
     progressFill.style.width = '0%';
@@ -357,20 +356,23 @@ function downloadAudio(trackName) {
         return;
     }
 
+    // Ensure trackName is a string
+    const safeTrackName = String(trackName || 'unknown-track');
+
     // In a real app, this would download the actual audio file
     const link = document.createElement('a');
-    link.href = `https://example.com/audio/${trackName}.mp3`;
-    link.download = `${trackName}.mp3`;
+    link.href = `https://example.com/audio/${safeTrackName}.mp3`;
+    link.download = `${safeTrackName}.mp3`;
     link.click();
-    
-    showNotification(`Downloading: ${trackName}`, 'success');
-    trackAudioProgress(trackName, 'downloaded');
+
+    showNotification(`Downloading: ${safeTrackName}`, 'success');
+    trackAudioProgress(safeTrackName, 'downloaded');
 }
 
 // Video Player Functions
 function playVideo(videoName) {
     showNotification(`🎬 Loading video: ${videoName.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}`, 'info');
-    
+
     if (currentUser) {
         trackVideoProgress(videoName, 'started');
     }
@@ -381,12 +383,12 @@ function playPremiumVideo(videoName) {
         showNotification('Please log in to access premium content', 'warning');
         return;
     }
-    
+
     if (userSubscription?.status !== 'premium') {
         showPremiumModal();
         return;
     }
-    
+
     showNotification(`🎬 Loading premium video: ${videoName}`, 'info');
     trackVideoProgress(videoName, 'started');
 }
@@ -420,7 +422,7 @@ function showPremiumModal() {
         showAuthModal('login');
         return;
     }
-    
+
     const premiumModal = document.getElementById('premiumModal');
     premiumModal.classList.add('active');
     document.body.style.overflow = 'hidden';
@@ -434,14 +436,14 @@ function closePremiumModal() {
 
 async function processPremiumSubscription() {
     const paymentMethod = document.getElementById('paymentMethod').value;
-    
+
     try {
         // In a real app, you would integrate with Stripe, PayPal, etc.
         showNotification('Processing payment...', 'info');
-        
+
         // Simulate payment processing
         await new Promise(resolve => setTimeout(resolve, 2000));
-        
+
         // Update user subscription in Supabase
         const { error } = await supabaseClient
             .from('profiles')
@@ -463,7 +465,7 @@ async function processPremiumSubscription() {
         showPremiumContent();
         closePremiumModal();
         showNotification('🎉 Welcome to Premium! You now have access to all exclusive content and your personal coach!', 'success');
-        
+
     } catch (error) {
         console.error('Payment error:', error);
         showNotification('Payment failed. Please try again.', 'error');
@@ -475,7 +477,7 @@ function showPremiumContent() {
     if (premiumVideos) {
         premiumVideos.style.display = 'block';
     }
-    
+
     // Remove locked overlays
     document.querySelectorAll('.locked-content').forEach(element => {
         element.classList.remove('locked-content');
@@ -496,7 +498,7 @@ function selectBlock(element, time) {
     }
 
     element.classList.toggle('selected');
-    
+
     if (element.classList.contains('selected')) {
         showNotification(`✅ Added ${time} to your routine!`, 'success');
     } else {
@@ -512,7 +514,7 @@ function enableTimeEditing() {
 
     editingMode = !editingMode;
     const timeBlocks = document.querySelectorAll('.time-block');
-    
+
     if (editingMode) {
         timeBlocks.forEach(block => {
             block.classList.add('editable');
@@ -532,7 +534,7 @@ function showTimeEditor(originalTime) {
     const timeEditorModal = document.getElementById('timeEditorModal');
     timeEditorModal.classList.add('active');
     document.body.style.overflow = 'hidden';
-    
+
     // Pre-fill with current values if available
     if (originalTime) {
         const times = originalTime.split(' - ');
@@ -588,7 +590,7 @@ async function saveTimeEdit() {
 
         closeTimeEditor();
         showNotification('Time block updated successfully!', 'success');
-        
+
     } catch (error) {
         console.error('Error saving routine:', error);
         showNotification('Error saving time block', 'error');
@@ -598,15 +600,15 @@ async function saveTimeEdit() {
 function convertTo24Hour(time12h) {
     const [time, modifier] = time12h.split(' ');
     let [hours, minutes] = time.split(':');
-    
+
     if (hours === '12') {
         hours = '00';
     }
-    
+
     if (modifier === 'PM') {
         hours = parseInt(hours, 10) + 12;
     }
-    
+
     return `${hours.toString().padStart(2, '0')}:${minutes}`;
 }
 
@@ -626,7 +628,7 @@ async function saveRoutine() {
         // Save routine completion in progress tracking
         await updateDailyProgress('routine_created', true);
         showNotification(`🏆 Routine Saved! You've selected ${selectedBlocks.length} time blocks.`, 'success');
-        
+
     } catch (error) {
         console.error('Error saving routine:', error);
         showNotification('Error saving routine', 'error');
@@ -639,7 +641,7 @@ async function updateDailyProgress(habitName, completed) {
 
     try {
         const today = new Date().toISOString().split('T')[0];
-        
+
         const { data: existing, error: fetchError } = await supabaseClient
             .from('daily_progress')
             .select('*')
@@ -659,19 +661,19 @@ async function updateDailyProgress(habitName, completed) {
                 .from('daily_progress')
                 .update(progressData)
                 .eq('id', existing.id);
-            
+
             if (error) throw error;
         } else {
             const { error } = await supabaseClient
                 .from('daily_progress')
                 .insert([progressData]);
-            
+
             if (error) throw error;
         }
 
         // Update streak if applicable
         await updateStreak();
-        
+
     } catch (error) {
         console.error('Error updating progress:', error);
     }
@@ -693,12 +695,12 @@ async function updateStreak() {
 
         let currentStreak = 0;
         const today = new Date().toISOString().split('T')[0];
-        
+
         for (const day of recentProgress) {
             const hasCompletions = Object.values(day).some(value => 
                 typeof value === 'boolean' && value === true
             );
-            
+
             if (hasCompletions) {
                 currentStreak++;
             } else {
@@ -718,7 +720,7 @@ async function updateStreak() {
         if (updateError) throw updateError;
 
         userProgress.current_streak = currentStreak;
-        
+
     } catch (error) {
         console.error('Error updating streak:', error);
     }
@@ -729,7 +731,7 @@ function updateProgress() {
         showNotification('Please log in to track progress', 'warning');
         return;
     }
-    
+
     updateDailyProgress('manual_update', true);
     showNotification('📈 Progress Updated! Keep building momentum!', 'success');
 }
@@ -764,7 +766,7 @@ function showAuthModal(type) {
 function closeAuthModal() {
     const authModal = document.getElementById('authModal');
     const authForm = document.getElementById('authForm');
-    
+
     authModal.classList.remove('active');
     document.body.style.overflow = '';
     authForm.reset();
@@ -776,7 +778,7 @@ function toggleForm(type) {
 
 async function handleAuthSubmit(event) {
     event.preventDefault();
-    
+
     if (!supabaseClient) {
         showNotification('Supabase not connected', 'error');
         return;
@@ -812,12 +814,11 @@ async function handleAuthSubmit(event) {
 
             if (data.user) {
                 currentUser = data.user;
-                await initializeUserTables();
+                await createUserProfile(name, email);
                 updateUserInterface();
                 closeAuthModal();
                 showNotification(`Welcome to MindCraft Academy, ${name}! Please check your email to verify your account.`, 'success');
             }
-
         } else if (formType === 'login') {
             const { data, error } = await supabaseClient.auth.signInWithPassword({
                 email: email,
@@ -831,13 +832,10 @@ async function handleAuthSubmit(event) {
 
             if (data.user) {
                 currentUser = data.user;
-                await initializeUserTables();
+                await loadOrCreateUserProfile();
                 updateUserInterface();
                 closeAuthModal();
-                const displayName = data.user.user_metadata?.name || email.split('@')[0];
-                showNotification(`Welcome back, ${displayName}!`, 'success');
-                
-                await checkSubscriptionStatus();
+                showNotification(`Welcome back!`, 'success');
             }
         }
     } catch (error) {
@@ -849,10 +847,65 @@ async function handleAuthSubmit(event) {
     }
 }
 
+async function loadOrCreateUserProfile() {
+    if (!currentUser) return;
+
+    try {
+        const { data: profile, error } = await supabaseClient
+            .from('profiles')
+            .select('*')
+            .eq('id', currentUser.id)
+            .single();
+
+        if (error && error.code !== 'PGRST116') {
+            throw error;
+        }
+
+        if (!profile) {
+            // Create profile if it doesn't exist
+            await createUserProfile(currentUser.user_metadata?.name, currentUser.email);
+        } else {
+            // Use existing profile data
+            console.log('Existing profile loaded:', profile);
+        }
+    } catch (error) {
+        console.error('Error loading/creating profile:', error);
+        showNotification('Failed to load or create profile', 'error');
+    }
+}
+
+async function createUserProfile(name, email) {
+    if (!currentUser) return;
+
+    try {
+        const { error } = await supabaseClient
+            .from('profiles')
+            .insert([
+                {
+                    id: currentUser.id,
+                    email: email,
+                    name: name || email.split('@')[0],
+                    created_at: new Date().toISOString(),
+                    subscription_status: 'free',
+                    join_date: new Date().toISOString()
+                }
+            ]);
+
+        if (error) {
+            throw error;
+        }
+
+        console.log('New profile created for user:', currentUser.id);
+    } catch (error) {
+        console.error('Error creating profile:', error);
+        showNotification('Failed to create profile', 'error');
+    }
+}
+
 async function logout() {
     try {
         const { error } = await supabaseClient.auth.signOut();
-        
+
         if (error) {
             showNotification(error.message, 'error');
             return;
@@ -864,16 +917,16 @@ async function logout() {
         userRoutine = [];
         updateUserInterface();
         showNotification('You have been signed out successfully', 'success');
-        
+
         const profileMenu = document.getElementById('profileMenu');
         profileMenu.classList.remove('active');
-        
+
         // Hide premium content
         const premiumVideos = document.getElementById('premiumVideos');
         if (premiumVideos) {
             premiumVideos.style.display = 'none';
         }
-        
+
     } catch (error) {
         console.error('Logout error:', error);
         showNotification('Logout failed. Please try again.', 'error');
@@ -947,7 +1000,7 @@ function subscribeNewsletter(event) {
 document.addEventListener('DOMContentLoaded', function() {
     const profileContainer = document.getElementById('profileContainer');
     const profileMenu = document.getElementById('profileMenu');
-    
+
     if (profileContainer) {
         profileContainer.addEventListener('click', function(e) {
             e.stopPropagation();
