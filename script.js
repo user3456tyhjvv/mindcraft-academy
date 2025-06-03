@@ -40,13 +40,13 @@ document.addEventListener('DOMContentLoaded', function() {
             if (typeof supabase !== 'undefined' && supabase.createClient) {
                 supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
                 console.log('Supabase initialized successfully');
-                
+
                 // Handle email confirmation redirect
                 handleEmailConfirmation();
-                
+
                 // Handle password reset redirect
                 handlePasswordReset();
-                
+
                 checkUserSession();
                 setupAudioPlayers();
                 showNotification('Welcome to MindCraft Academy!', 'success');
@@ -86,7 +86,7 @@ async function handleEmailConfirmation() {
                 );
                 updateUserInterface();
                 showNotification('🎉 Email confirmed! Welcome to MindCraft Academy!', 'success');
-                
+
                 // Clean up URL
                 window.history.replaceState({}, document.title, window.location.pathname);
             }
@@ -115,7 +115,7 @@ async function handlePasswordReset() {
 
             // Show password reset form
             showPasswordResetModal();
-            
+
             // Clean up URL
             window.history.replaceState({}, document.title, window.location.pathname);
         } catch (error) {
@@ -143,7 +143,7 @@ function showPasswordResetModal() {
     nameGroup.style.display = 'none';
     emailGroup.style.display = 'none';
     authForm.dataset.type = 'reset-password';
-    
+
     // Change password field placeholder
     document.getElementById('password').placeholder = 'Enter your new password';
 }
@@ -266,13 +266,13 @@ async function checkUserSession() {
             currentUser = session.user;
             await initializeUserTables();
             updateUserInterface();
-            
+
             // Load and show notifications
             await loadUserNotifications();
-            
+
             // Show welcome notification
             await addWelcomeNotification();
-            
+
             showNotification(`Welcome back, ${currentUser.email}!`, 'success');
 
             // Check subscription status
@@ -815,11 +815,11 @@ async function loadUserNotifications() {
 
         userNotifications = notifications || [];
         updateNotificationUI();
-        
+
         // Start polling for new notifications
         if (notificationInterval) clearInterval(notificationInterval);
         notificationInterval = setInterval(pollForNewNotifications, 30000); // Check every 30 seconds
-        
+
     } catch (error) {
         console.error('Error loading notifications:', error);
     }
@@ -830,7 +830,7 @@ async function pollForNewNotifications() {
 
     try {
         const lastCheck = userNotifications.length > 0 ? userNotifications[0].created_at : new Date(0).toISOString();
-        
+
         const { data: newNotifications, error } = await supabaseClient
             .from('user_notifications')
             .select('*')
@@ -843,7 +843,7 @@ async function pollForNewNotifications() {
         if (newNotifications && newNotifications.length > 0) {
             userNotifications = [...newNotifications, ...userNotifications];
             updateNotificationUI();
-            
+
             // Show toast notification for new messages
             showNotification(`You have ${newNotifications.length} new notification(s)`, 'info');
         }
@@ -933,7 +933,7 @@ function updateNotificationUI() {
 
 function toggleNotifications(event) {
     if (event) event.stopPropagation();
-    
+
     const dropdown = document.getElementById('notificationDropdown');
     dropdown.classList.toggle('active');
 }
@@ -966,7 +966,7 @@ async function markAllAsRead() {
 
     try {
         const unreadIds = userNotifications.filter(n => !n.is_read).map(n => n.id);
-        
+
         if (unreadIds.length === 0) return;
 
         const { error } = await supabaseClient
@@ -981,7 +981,7 @@ async function markAllAsRead() {
         userNotifications.forEach(notification => {
             notification.is_read = true;
         });
-        
+
         updateNotificationUI();
         showNotification('All notifications marked as read', 'success');
     } catch (error) {
@@ -998,7 +998,7 @@ function formatNotificationTime(timestamp) {
     if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
     if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h ago`;
     if (diffInMinutes < 10080) return `${Math.floor(diffInMinutes / 1440)}d ago`;
-    
+
     return notificationTime.toLocaleDateString();
 }
 
@@ -1006,7 +1006,7 @@ function formatNotificationTime(timestamp) {
 document.addEventListener('click', function(event) {
     const dropdown = document.getElementById('notificationDropdown');
     const bell = document.getElementById('notificationBell');
-    
+
     if (dropdown && bell && !bell.contains(event.target)) {
         dropdown.classList.remove('active');
     }
@@ -1192,17 +1192,17 @@ async function handleAuthSubmit(event) {
                 }
 
                 currentUser = data.user;
-                
+
                 // Load or create user profile
                 await loadOrCreateUserProfile();
-                
+
                 updateUserInterface();
                 closeAuthModal();
-                
+
                 // Load user notifications and data
                 await loadUserNotifications();
                 await addWelcomeNotification();
-                
+
                 showNotification(`Welcome back!`, 'success');
             }
         } else if (formType === 'forgot-password') {
@@ -1326,18 +1326,18 @@ async function loadOrCreateUserProfile() {
                 currentUser.user_metadata?.name || currentUser.email?.split('@')[0],
                 currentUser.email
             );
-            
+
             // Verify profile was created
             const { data: newProfile, error: verifyError } = await supabaseClient
                 .from('profiles')
                 .select('*')
                 .eq('id', currentUser.id)
                 .maybeSingle();
-            
+
             if (verifyError || !newProfile) {
                 throw new Error('Failed to create or verify user profile');
             }
-            
+
             console.log('New profile created and verified:', newProfile);
         } else {
             console.log('Existing profile loaded:', profile);
@@ -1352,22 +1352,27 @@ async function loadOrCreateUserProfile() {
     }
 }
 
-async function createUserProfile(name, email) {
+async function createUserProfile(email, name) {
     if (!currentUser) {
         throw new Error('No current user found');
     }
 
     try {
-        // Ensure we have a valid session first
+        // Get current session and ensure it's active
         const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
-        
+
         if (sessionError) {
+            console.error('Session error:', sessionError);
             throw sessionError;
         }
 
-        if (!session) {
-            throw new Error('No active session found');
+        if (!session || !session.user) {
+            console.log('No active session or user, cannot create profile');
+            return;
         }
+
+        // Wait a moment for auth state to settle
+        await new Promise(resolve => setTimeout(resolve, 1000));
 
         // First check if profile already exists
         const { data: existingProfile, error: checkError } = await supabaseClient
@@ -1411,10 +1416,48 @@ async function createUserProfile(name, email) {
         console.log('New profile created for user:', session.user.id);
         showNotification('Profile created successfully!', 'success');
         return newProfile;
-        
+
     } catch (error) {
         console.error('Error creating profile:', error);
         throw error; // Re-throw to allow caller to handle
+    }
+}
+
+async function loadUserProfile() {
+    if (!currentUser) return null;
+
+    try {
+        // Add retry logic for profile loading
+        let retries = 3;
+        let profile = null;
+
+        while (retries > 0 && !profile) {
+            const { data, error } = await supabaseClient
+                .from('profiles')
+                .select('*')
+                .eq('id', currentUser.id)
+                .single();
+
+            if (error) {
+                if (error.code === 'PGRST116') {
+                    console.log('No profile found for user, attempting to create...');
+                    // Try to create profile if it doesn't exist
+                    await createUserProfile(currentUser.email, currentUser.user_metadata?.name);
+                    retries--;
+                    await new Promise(resolve => setTimeout(resolve, 1500)); // Wait before retry
+                    continue;
+                }
+                throw error;
+            }
+
+            profile = data;
+            break;
+        }
+
+        return profile;
+    } catch (error) {
+        console.error('Error loading user profile:', error);
+        return null;
     }
 }
 
@@ -1432,13 +1475,13 @@ async function logout() {
         userProgress = null;
         userRoutine = [];
         userNotifications = [];
-        
+
         // Clear notification polling
         if (notificationInterval) {
             clearInterval(notificationInterval);
             notificationInterval = null;
         }
-        
+
         updateUserInterface();
         updateNotificationUI();
         showNotification('You have been signed out successfully', 'success');
