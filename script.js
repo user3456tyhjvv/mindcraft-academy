@@ -1342,6 +1342,18 @@ async function createUserProfile(name, email) {
     if (!currentUser) return;
 
     try {
+        // Ensure we have a valid session first
+        const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
+        
+        if (sessionError) {
+            throw sessionError;
+        }
+
+        if (!session) {
+            console.log('No active session, cannot create profile');
+            return;
+        }
+
         // First check if profile already exists
         const { data: existingProfile, error: checkError } = await supabaseClient
             .from('profiles')
@@ -1358,14 +1370,14 @@ async function createUserProfile(name, email) {
             return;
         }
 
-        // Create new profile
+        // Create new profile with authenticated user context
         const { error } = await supabaseClient
             .from('profiles')
             .insert([
                 {
-                    id: currentUser.id,
-                    email: email,
-                    name: name || email.split('@')[0],
+                    id: session.user.id,
+                    email: email || session.user.email,
+                    name: name || session.user.user_metadata?.name || email?.split('@')[0] || session.user.email.split('@')[0],
                     created_at: new Date().toISOString(),
                     subscription_status: 'free',
                     join_date: new Date().toISOString()
@@ -1376,7 +1388,7 @@ async function createUserProfile(name, email) {
             throw error;
         }
 
-        console.log('New profile created for user:', currentUser.id);
+        console.log('New profile created for user:', session.user.id);
         showNotification('Profile created successfully!', 'success');
     } catch (error) {
         console.error('Error creating profile:', error);
