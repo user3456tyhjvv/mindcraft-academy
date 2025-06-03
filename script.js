@@ -1326,6 +1326,19 @@ async function loadOrCreateUserProfile() {
                 currentUser.user_metadata?.name || currentUser.email?.split('@')[0],
                 currentUser.email
             );
+            
+            // Verify profile was created
+            const { data: newProfile, error: verifyError } = await supabaseClient
+                .from('profiles')
+                .select('*')
+                .eq('id', currentUser.id)
+                .maybeSingle();
+            
+            if (verifyError || !newProfile) {
+                throw new Error('Failed to create or verify user profile');
+            }
+            
+            console.log('New profile created and verified:', newProfile);
         } else {
             console.log('Existing profile loaded:', profile);
         }
@@ -1335,11 +1348,14 @@ async function loadOrCreateUserProfile() {
     } catch (error) {
         console.error('Error loading/creating profile:', error);
         showNotification('Failed to load profile: ' + error.message, 'error');
+        throw error; // Re-throw to prevent further execution
     }
 }
 
 async function createUserProfile(name, email) {
-    if (!currentUser) return;
+    if (!currentUser) {
+        throw new Error('No current user found');
+    }
 
     try {
         // Ensure we have a valid session first
@@ -1350,15 +1366,14 @@ async function createUserProfile(name, email) {
         }
 
         if (!session) {
-            console.log('No active session, cannot create profile');
-            return;
+            throw new Error('No active session found');
         }
 
         // First check if profile already exists
         const { data: existingProfile, error: checkError } = await supabaseClient
             .from('profiles')
             .select('id')
-            .eq('id', currentUser.id)
+            .eq('id', session.user.id)
             .maybeSingle();
 
         if (checkError && checkError.code !== 'PGRST116') {
@@ -1366,33 +1381,40 @@ async function createUserProfile(name, email) {
         }
 
         if (existingProfile) {
-            console.log('Profile already exists for user:', currentUser.id);
-            return;
+            console.log('Profile already exists for user:', session.user.id);
+            return existingProfile;
         }
 
+        // Prepare profile data
+        const profileData = {
+            id: session.user.id,
+            email: email || session.user.email,
+            name: name || session.user.user_metadata?.name || (email || session.user.email).split('@')[0],
+            created_at: new Date().toISOString(),
+            subscription_status: 'free',
+            join_date: new Date().toISOString(),
+            totp_enabled: false
+        };
+
         // Create new profile with authenticated user context
-        const { error } = await supabaseClient
+        const { data: newProfile, error } = await supabaseClient
             .from('profiles')
-            .insert([
-                {
-                    id: session.user.id,
-                    email: email || session.user.email,
-                    name: name || session.user.user_metadata?.name || email?.split('@')[0] || session.user.email.split('@')[0],
-                    created_at: new Date().toISOString(),
-                    subscription_status: 'free',
-                    join_date: new Date().toISOString()
-                }
-            ]);
+            .insert([profileData])
+            .select()
+            .single();
 
         if (error) {
-            throw error;
+            console.error('Profile creation error details:', error);
+            throw new Error(`Failed to create profile: ${error.message}`);
         }
 
         console.log('New profile created for user:', session.user.id);
         showNotification('Profile created successfully!', 'success');
+        return newProfile;
+        
     } catch (error) {
         console.error('Error creating profile:', error);
-        showNotification('Failed to create profile: ' + error.message, 'error');
+        throw error; // Re-throw to allow caller to handle
     }
 }
 

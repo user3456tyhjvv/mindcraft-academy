@@ -83,14 +83,16 @@ ALTER TABLE daily_progress ENABLE ROW LEVEL SECURITY;
 ALTER TABLE audio_progress ENABLE ROW LEVEL SECURITY;
 ALTER TABLE video_progress ENABLE ROW LEVEL SECURITY;
 
+-- Drop existing policies to avoid conflicts
+DROP POLICY IF EXISTS "Users can view own profile" ON profiles;
+DROP POLICY IF EXISTS "Users can update own profile" ON profiles;
+DROP POLICY IF EXISTS "Users can insert own profile" ON profiles;
+DROP POLICY IF EXISTS "Enable insert for authenticated users during signup" ON profiles;
+
 -- Policies for profiles
 CREATE POLICY "Users can view own profile" ON profiles FOR SELECT USING (auth.uid() = id);
 CREATE POLICY "Users can update own profile" ON profiles FOR UPDATE USING (auth.uid() = id);
 CREATE POLICY "Users can insert own profile" ON profiles FOR INSERT WITH CHECK (auth.uid() = id);
-
--- Allow authenticated users to insert their own profile during signup
-CREATE POLICY "Enable insert for authenticated users during signup" ON profiles
-FOR INSERT WITH CHECK (auth.uid() = id AND auth.role() = 'authenticated');
 
 -- Policies for user_progress
 CREATE POLICY "Users can view own progress" ON user_progress FOR SELECT USING (auth.uid() = user_id);
