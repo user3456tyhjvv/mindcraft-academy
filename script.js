@@ -56,13 +56,16 @@ async function initializeUserTables() {
 
     try {
         // Create user profile if doesn't exist
-        const { data: profile, error: profileError } = await supabaseClient
+        const { data: profiles, error: profileError } = await supabaseClient
             .from('profiles')
             .select('*')
-            .eq('id', currentUser.id)
-            .single();
+            .eq('id', currentUser.id);
 
-        if (profileError && profileError.code === 'PGRST116') {
+        if (profileError) {
+            throw profileError;
+        }
+
+        if (!profiles || profiles.length === 0) {
             // Profile doesn't exist, create it
             const { error: createError } = await supabaseClient
                 .from('profiles')
@@ -92,13 +95,16 @@ async function initializeUserTables() {
 
 async function initializeUserProgress() {
     try {
-        const { data: progress, error } = await supabaseClient
+        const { data: progressArray, error } = await supabaseClient
             .from('user_progress')
             .select('*')
-            .eq('user_id', currentUser.id)
-            .single();
+            .eq('user_id', currentUser.id);
 
-        if (error && error.code === 'PGRST116') {
+        if (error) {
+            throw error;
+        }
+
+        if (!progressArray || progressArray.length === 0) {
             // No progress record exists, create one
             const initialProgress = {
                 user_id: currentUser.id,
@@ -117,8 +123,8 @@ async function initializeUserProgress() {
 
             if (insertError) throw insertError;
             userProgress = initialProgress;
-        } else if (!error) {
-            userProgress = progress;
+        } else {
+            userProgress = progressArray[0];
         }
     } catch (error) {
         console.error('Error initializing progress:', error);
@@ -175,13 +181,13 @@ async function checkUserSession() {
 
 async function checkSubscriptionStatus() {
     try {
-        const { data: profile, error } = await supabaseClient
+        const { data: profiles, error } = await supabaseClient
             .from('profiles')
             .select('subscription_status, subscription_end_date')
-            .eq('id', currentUser.id)
-            .single();
+            .eq('id', currentUser.id);
 
-        if (!error && profile) {
+        if (!error && profiles && profiles.length > 0) {
+            const profile = profiles[0];
             userSubscription = {
                 status: profile.subscription_status,
                 endDate: profile.subscription_end_date
@@ -239,8 +245,11 @@ function toggleAudio(button, trackName) {
 
     // Get track name from data attribute if not provided
     if (!trackName || typeof trackName !== 'string') {
-        trackName = mediaPlayer.dataset.track || 'unknown-track';
+        trackName = mediaPlayer.dataset.track || mediaPlayer.querySelector('h4')?.textContent || 'unknown-track';
     }
+
+    // Ensure trackName is a string
+    trackName = String(trackName).replace(/[^a-zA-Z0-9\s]/g, '').trim();
 
     if (currentlyPlaying && currentlyPlaying !== audio) {
         currentlyPlaying.pause();
@@ -367,6 +376,25 @@ function downloadAudio(trackName) {
 
     showNotification(`Downloading: ${safeTrackName}`, 'success');
     trackAudioProgress(safeTrackName, 'downloaded');
+}
+
+function downloadVideo(videoName) {
+    if (!currentUser) {
+        showNotification('Please log in to download video files', 'warning');
+        return;
+    }
+
+    // Ensure videoName is a string
+    const safeVideoName = String(videoName || 'unknown-video');
+
+    // In a real app, this would download the actual video file
+    const link = document.createElement('a');
+    link.href = `https://example.com/video/${safeVideoName}.mp4`;
+    link.download = `${safeVideoName}.mp4`;
+    link.click();
+
+    showNotification(`Downloading: ${safeVideoName}`, 'success');
+    trackVideoProgress(safeVideoName, 'downloaded');
 }
 
 // Video Player Functions
@@ -851,22 +879,33 @@ async function loadOrCreateUserProfile() {
     if (!currentUser) return;
 
     try {
-        const { data: profile, error } = await supabaseClient
+        const { data: profiles, error } = await supabaseClient
             .from('profiles')
             .select('*')
-            .eq('id', currentUser.id)
-            .single();
+            .eq('id', currentUser.id);
 
-        if (error && error.code !== 'PGRST116') {
+        if (error) {
             throw error;
         }
 
-        if (!profile) {
+        if (!profiles || profiles.length === 0) {
             // Create profile if it doesn't exist
             await createUserProfile(currentUser.user_metadata?.name, currentUser.email);
         } else {
-            // Use existing profile data
+            // Use existing profile data (take the first one if multiple exist)
+            const profile = profiles[0];
             console.log('Existing profile loaded:', profile);
+            
+            // If multiple profiles exist, clean up duplicates
+            if (profiles.length > 1) {
+                console.warn('Multiple profiles found, cleaning up duplicates');
+                for (let i = 1; i < profiles.length; i++) {
+                    await supabaseClient
+                        .from('profiles')
+                        .delete()
+                        .eq('id', profiles[i].id);
+                }
+            }
         }
     } catch (error) {
         console.error('Error loading/creating profile:', error);

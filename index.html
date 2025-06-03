@@ -2136,16 +2136,22 @@
                     }
 
                     // Get user profile
-                    const {data: profile, error: profileError} = await supabaseClient
+                    const {data: profiles, error: profileError} = await supabaseClient
                         .from('profiles')
                         .select('*')
-                        .eq('id', data.user.id)
-                        .single();
+                        .eq('id', data.user.id);
 
                     if (profileError) {
                         showNotification(`Error loading profile: ${profileError.message}`, 'error');
                         return;
                     }
+
+                    if (!profiles || profiles.length === 0) {
+                        showNotification('No profile found', 'error');
+                        return;
+                    }
+
+                    const profile = profiles[0];
 
                     currentUser = {
                         id: data.user.id,
@@ -2214,16 +2220,22 @@
 
                 if (data.session) {
                     // User is logged in
-                    const {data: profile, error: profileError} = await supabaseClient
+                    const {data: profiles, error: profileError} = await supabaseClient
                         .from('profiles')
                         .select('*')
-                        .eq('id', data.session.user.id)
-                        .single();
+                        .eq('id', data.session.user.id);
 
                     if (profileError) {
                         console.error('Error loading profile:', profileError.message);
                         return;
                     }
+
+                    if (!profiles || profiles.length === 0) {
+                        console.error('No profile found for user');
+                        return;
+                    }
+
+                    const profile = profiles[0];
 
                     currentUser = {
                         id: data.session.user.id,
