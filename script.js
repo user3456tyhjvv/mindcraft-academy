@@ -7,10 +7,15 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 let supabaseClient;
 
 // Initialize Supabase when the script loads
-if (typeof supabase !== 'undefined') {
-    supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-} else {
-    console.warn('Supabase not loaded - some features may not work');
+try {
+    if (typeof supabase !== 'undefined' && supabase.createClient) {
+        supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        console.log('Supabase client initialized successfully');
+    } else {
+        console.warn('Supabase not loaded - some features may not work');
+    }
+} catch (error) {
+    console.error('Error initializing Supabase:', error);
 }
 
 // User session management
@@ -26,15 +31,24 @@ let currentlyPlaying = null;
 
 // Initialize when page loads
 document.addEventListener('DOMContentLoaded', function() {
-    if (typeof supabase !== 'undefined') {
-        supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        console.log('Supabase initialized successfully');
-        checkUserSession();
-        setupAudioPlayers();
-    } else {
-        console.error('Supabase not loaded');
-        showNotification('Supabase connection failed', 'error');
-    }
+    // Wait a moment for Supabase script to fully load
+    setTimeout(() => {
+        try {
+            if (typeof supabase !== 'undefined' && supabase.createClient) {
+                supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                console.log('Supabase initialized successfully');
+                checkUserSession();
+                setupAudioPlayers();
+                showNotification('Welcome to MindCraft Academy!', 'success');
+            } else {
+                console.error('Supabase not loaded properly');
+                showNotification('Database connection unavailable - some features may be limited', 'warning');
+            }
+        } catch (error) {
+            console.error('Error during initialization:', error);
+            showNotification('Initialization error - some features may be limited', 'warning');
+        }
+    }, 100);
 });
 
 // Supabase Database Setup Functions
@@ -131,8 +145,9 @@ async function loadUserRoutine() {
 
 // User session management
 async function checkUserSession() {
-    if (!supabaseClient) {
-        console.warn('Supabase not initialized');
+    if (!supabaseClient || !supabaseClient.auth) {
+        console.warn('Supabase not properly initialized');
+        showNotification('Database connection not available', 'warning');
         return;
     }
     
@@ -224,8 +239,8 @@ function toggleAudio(button, trackName) {
     const audio = mediaPlayer.querySelector('.audio-element');
     
     // Get track name from data attribute if not provided
-    if (!trackName) {
-        trackName = mediaPlayer.dataset.track || 'unknown';
+    if (!trackName || typeof trackName !== 'string') {
+        trackName = mediaPlayer.dataset.track || 'unknown-track';
     }
     
     if (currentlyPlaying && currentlyPlaying !== audio) {
@@ -234,7 +249,10 @@ function toggleAudio(button, trackName) {
     }
 
     if (audio.paused) {
-        audio.play();
+        audio.play().catch(error => {
+            console.log('Audio play failed:', error);
+            showNotification('Audio playback not available in preview', 'info');
+        });
         button.innerHTML = '⏸';
         button.style.background = '#8b4513';
         currentlyPlaying = audio;
