@@ -102,9 +102,8 @@ async function checkAdminSetup() {
             .from('admin_secrets')
             .select('*');
 
-        if (error && error.code === '42P01') {
-            // Table doesn't exist, create admin tables
-            await createAdminTables();
+        if (error) {
+            console.log('Admin tables not found or error accessing them, showing setup phase');
             showSetupPhase();
         } else if (!adminData || adminData.length === 0) {
             showSetupPhase();
@@ -130,11 +129,21 @@ function showSetupPhase() {
     const secret = generateTOTPSecret();
     document.getElementById('secretKey').textContent = secret;
     
-    // Generate QR code
+    // Generate QR code - check if QRCode is available
     const qrData = `otpauth://totp/MindCraft%20Academy:Admin?secret=${secret}&issuer=MindCraft%20Academy`;
-    QRCode.toCanvas(document.getElementById('qrcode'), qrData, function(error) {
-        if (error) console.error(error);
-    });
+    
+    if (typeof QRCode !== 'undefined') {
+        QRCode.toCanvas(document.getElementById('qrcode'), qrData, {
+            width: 200,
+            margin: 2
+        }, function(error) {
+            if (error) console.error('QR Code generation error:', error);
+        });
+    } else {
+        console.error('QRCode library not loaded');
+        // Show QR data as text if library fails
+        document.getElementById('qrcode').innerHTML = '<p>QR Code library not loaded. Use manual entry:</p>';
+    }
     
     // Store the secret for verification
     window.tempAdminSecret = secret;
