@@ -80,21 +80,31 @@ async function handleEmailConfirmation() {
             // Create user profile after email confirmation
             if (data.user) {
                 currentUser = data.user;
-                await loadOrCreateUserProfile();
-                updateUserInterface();
+                
+                try {
+                    await loadOrCreateUserProfile();
+                    updateUserInterface();
 
-                // Load user notifications and data
-                await loadUserNotifications();
-                await addWelcomeNotification();
+                    // Load user notifications and data
+                    await loadUserNotifications();
+                    await addWelcomeNotification();
 
-                showNotification('🎉 Email confirmed! Welcome to MindCraft Academy!', 'success');
+                    const userName = currentUser.user_metadata?.name || currentUser.email?.split('@')[0];
+                    showNotification(`🎉 Email confirmed! Welcome to MindCraft Academy, ${userName}!`, 'success');
 
-                // Clean up URL and redirect to main page
-                window.history.replaceState({}, document.title, '/');
+                    // Clean up URL and redirect to main page
+                    window.history.replaceState({}, document.title, '/');
+                } catch (profileError) {
+                    console.error('Profile creation error after confirmation:', profileError);
+                    showNotification('⚠️ Email confirmed but there was an issue setting up your profile. Please try logging in.', 'warning');
+                    
+                    // Still clean up URL
+                    window.history.replaceState({}, document.title, '/');
+                }
             }
         } catch (error) {
             console.error('Email confirmation error:', error);
-            showNotification('Email confirmation failed. Please try logging in.', 'error');
+            showNotification('❌ Email confirmation failed. Please try logging in or contact support.', 'error');
         }
     }
 }
@@ -981,18 +991,27 @@ async function handleAuthSubmit(event) {
                     data: {
                         name: name
                     },
-                    emailRedirectTo: `${window.location.origin}/email-confirmed`
+                    emailRedirectTo: `${window.location.origin}/email-confirmed.html`
                 }
             });
 
             if (error) {
-                showNotification(error.message, 'error');
+                showNotification(`❌ Signup failed: ${error.message}`, 'error');
+                return;
+            }
+
+            if (data.user && !data.user.identities?.length) {
+                // User already exists
+                showNotification('❌ An account with this email already exists. Please try logging in instead.', 'error');
                 return;
             }
 
             if (data.user) {
                 closeAuthModal();
                 showEmailConfirmationNotification(email);
+                showNotification('✅ Account created successfully! Please check your email to confirm your account.', 'success');
+            } else {
+                showNotification('❌ Signup failed. Please try again.', 'error');
             }
         } else if (formType === 'login') {
             const { data, error } = await supabaseClient.auth.signInWithPassword({
@@ -1001,30 +1020,61 @@ async function handleAuthSubmit(event) {
             });
 
             if (error) {
-                showNotification(error.message, 'error');
+                if (error.message.includes('Invalid login credentials')) {
+                    showNotification('❌ Invalid email or password. Please check your credentials and try again.', 'error');
+                } else if (error.message.includes('Email not confirmed')) {
+                    showNotification('⚠️ Please check your email and confirm your account before logging in.', 'warning');
+                } else {
+                    showNotification(`❌ Login failed: ${error.message}`, 'error');
+                }
                 return;
             }
 
             if (data.user) {
                 // Check if email is confirmed
                 if (!data.user.email_confirmed_at) {
-                    showNotification('Please check your email and confirm your account before logging in.', 'warning');
+                    showNotification('⚠️ Please check your email and confirm your account before logging in.', 'warning');
+                    
+                    // Offer to resend confirmation email
+                    const resendConfirm = confirm('Would you like us to resend the confirmation email?');
+                    if (resendConfirm) {
+                        try {
+                            await supabaseClient.auth.resend({
+                                type: 'signup',
+                                email: email,
+                                options: {
+                                    emailRedirectTo: `${window.location.origin}/email-confirmed.html`
+                                }
+                            });
+                            showNotification('📧 Confirmation email resent! Please check your inbox.', 'success');
+                        } catch (resendError) {
+                            showNotification('Failed to resend confirmation email.', 'error');
+                        }
+                    }
                     return;
                 }
 
                 currentUser = data.user;
 
-                // Load or create user profile
-                await loadOrCreateUserProfile();
+                try {
+                    // Load or create user profile
+                    await loadOrCreateUserProfile();
 
-                updateUserInterface();
-                closeAuthModal();
+                    updateUserInterface();
+                    closeAuthModal();
 
-                // Load user notifications and data
-                await loadUserNotifications();
-                await addWelcomeNotification();
+                    // Load user notifications and data
+                    await loadUserNotifications();
+                    await addWelcomeNotification();
 
-                showNotification(`Welcome back!`, 'success');
+                    const userName = currentUser.user_metadata?.name || currentUser.email?.split('@')[0];
+                    showNotification(`🎉 Welcome back, ${userName}!`, 'success');
+                } catch (profileError) {
+                    console.error('Profile loading error:', profileError);
+                    showNotification('⚠️ Login successful but there was an issue loading your profile. Some features may be limited.', 'warning');
+                }
+            } else {
+                showNotification('❌ Login failed. Please try again.', 'error');
             }
         } else if (formType === 'forgot-password') {
             const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
@@ -1070,10 +1120,10 @@ function showEmailConfirmationNotification(email) {
     notification.innerHTML = `
         <div class="email-confirmation-content">
             <div class="email-confirmation-icon">📧</div>
-            <h3>Check Your Email!</h3>
+            <h3>✅ Account Created Successfully!</h3>
             <p>We've sent a confirmation link to:</p>
             <p class="email-address">${email}</p>
-            <p>Click the link in your email to activate your account and start your transformation journey!</p>
+            <p><strong>Important:</strong> Please check your email and click the confirmation link to activate your account before logging in.</p>
             <div class="email-confirmation-actions">
                 <button onclick="this.parentElement.parentElement.parentElement.remove()" class="email-confirm-btn">Got it!</button>
                 <button onclick="resendConfirmationEmail('${email}')" class="resend-email-btn">Resend Email</button>
@@ -1144,23 +1194,29 @@ async function loadOrCreateUserProfile() {
         if (!profile) {
             // Create profile if it doesn't exist
             console.log('No profile found, creating new profile...');
-            await createUserProfile(
-                currentUser.user_metadata?.name || currentUser.email?.split('@')[0],
-                currentUser.email
-            );
+            const profileData = {
+                id: currentUser.id,
+                email: currentUser.email,
+                name: currentUser.user_metadata?.name || currentUser.email?.split('@')[0],
+                created_at: new Date().toISOString(),
+                subscription_status: 'free',
+                join_date: new Date().toISOString(),
+                totp_enabled: false
+            };
 
-            // Verify profile was created
-            const { data: newProfile, error: verifyError } = await supabaseClient
+            const { data: newProfile, error: createError } = await supabaseClient
                 .from('profiles')
-                .select('*')
-                .eq('id', currentUser.id)
-                .maybeSingle();
+                .insert([profileData])
+                .select()
+                .single();
 
-            if (verifyError || !newProfile) {
-                throw new Error('Failed to create or verify user profile');
+            if (createError) {
+                console.error('Profile creation error:', createError);
+                throw new Error(`Failed to create profile: ${createError.message}`);
             }
 
-            console.log('New profile created and verified:', newProfile);
+            console.log('New profile created:', newProfile);
+            showNotification('Profile created successfully!', 'success');
         } else {
             console.log('Existing profile loaded:', profile);
         }
@@ -1170,80 +1226,11 @@ async function loadOrCreateUserProfile() {
     } catch (error) {
         console.error('Error loading/creating profile:', error);
         showNotification('Failed to load profile: ' + error.message, 'error');
-        throw error; // Re-throw to prevent further execution
+        throw error;
     }
 }
 
-async function createUserProfile(email, name) {
-    if (!currentUser) {
-        throw new Error('No current user found');
-    }
 
-    try {
-        // Get current session and ensure it's active
-        const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
-
-        if (sessionError) {
-            console.error('Session error:', sessionError);
-            throw sessionError;
-        }
-
-        if (!session || !session.user) {
-            console.log('No active session or user, cannot create profile');
-            return;
-        }
-
-        // Wait a moment for auth state to settle
-        await new Promise(resolve => setTimeout(resolve, 1000));
-
-        // First check if profile already exists
-        const { data: existingProfile, error: checkError } = await supabaseClient
-            .from('profiles')
-            .select('id')
-            .eq('id', session.user.id)
-            .maybeSingle();
-
-        if (checkError && checkError.code !== 'PGRST116') {
-            throw checkError;
-        }
-
-        if (existingProfile) {
-            console.log('Profile already exists for user:', session.user.id);
-            return existingProfile;
-        }
-
-        // Prepare profile data
-        const profileData = {
-            id: session.user.id,
-            email: email || session.user.email,
-            name: name || session.user.user_metadata?.name || (email || session.user.email).split('@')[0],
-            created_at: new Date().toISOString(),
-            subscription_status: 'free',
-            join_date: new Date().toISOString(),
-            totp_enabled: false
-        };
-
-        // Create new profile with authenticated user context
-        const { data: newProfile, error } = await supabaseClient
-            .from('profiles')
-            .insert([profileData])
-            .select()
-            .single();
-
-        if (error) {
-            console.error('Profile creation error details:', error);
-            throw new Error(`Failed to create profile: ${error.message}`);
-        }
-
-        console.log('New profile created for user:', session.user.id);
-        showNotification('Profile created successfully!', 'success');
-        return newProfile;
-
-    } catch (error) {
-        console.error('Error creating profile:', error);
-        throw error; // Re-throw to allow caller to handle
-    }
-}
 
 async function loadUserProfile() {
     if (!currentUser) return null;

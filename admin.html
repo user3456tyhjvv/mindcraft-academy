@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MindCraft Academy - Admin Panel</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.3/qrcode.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
@@ -386,7 +385,7 @@
     <div id="authModal" class="auth-modal">
         <div class="auth-form">
             <h2 class="auth-title">🔐 Admin Access</h2>
-            
+
             <!-- Setup Phase -->
             <div id="setupPhase" class="hidden">
                 <div class="setup-section">
@@ -456,7 +455,7 @@
                 <!-- Audio Library Management -->
                 <div id="audio" class="content-section">
                     <h2 class="section-title">Audio Library Management</h2>
-                    
+
                     <div class="content-form">
                         <h3 style="margin-bottom: 20px;">Add New Audio Track</h3>
                         <form onsubmit="addAudioTrack(event)">
@@ -496,7 +495,7 @@
                 <!-- Video Library Management -->
                 <div id="videos" class="content-section">
                     <h2 class="section-title">Video Library Management</h2>
-                    
+
                     <div class="content-form">
                         <h3 style="margin-bottom: 20px;">Add New Video</h3>
                         <form onsubmit="addVideo(event)">
@@ -539,7 +538,7 @@
                 <!-- Journey Content Management -->
                 <div id="journey" class="content-section">
                     <h2 class="section-title">Journey Content Management</h2>
-                    
+
                     <div class="content-form">
                         <h3 style="margin-bottom: 20px;">Add New Feature Card</h3>
                         <form onsubmit="addJourneyContent(event)">
@@ -569,7 +568,7 @@
                 <!-- Notifications Management -->
                 <div id="notifications" class="content-section">
                     <h2 class="section-title">Notification Management</h2>
-                    
+
                     <div class="notification-form">
                         <h3 style="margin-bottom: 20px;">Send Notification</h3>
                         <div class="recipient-select">
@@ -581,7 +580,7 @@
                                 <option value="specific">Specific User</option>
                             </select>
                         </div>
-                        
+
                         <div id="specificUserInput" class="form-group hidden">
                             <label class="form-label">User Email</label>
                             <input type="email" id="specificUserEmail" class="form-input">
@@ -614,7 +613,7 @@
                 <!-- User Management -->
                 <div id="users" class="content-section">
                     <h2 class="section-title">User Management</h2>
-                    
+
                     <div class="content-list" id="usersList">
                         <div class="list-header">Registered Users</div>
                     </div>
@@ -623,18 +622,18 @@
                 <!-- Admin Access Management -->
                 <div id="admins" class="content-section">
                     <h2 class="section-title">Admin Access Management</h2>
-                    
+
                     <div class="content-form">
                         <h3 style="margin-bottom: 20px;">Generate New Admin Access</h3>
                         <p style="margin-bottom: 20px; color: #5d4e37;">Current active admin slots: <span id="adminCount">1</span>/5</p>
-                        
+
                         <div class="form-group">
                             <label class="form-label">Admin Name/Identifier</label>
                             <input type="text" id="adminName" class="form-input" placeholder="e.g., John Doe - Marketing" required>
                         </div>
-                        
+
                         <button onclick="generateAdminAccess()" class="submit-btn">Generate New Admin Access</button>
-                        
+
                         <div id="newAdminQR" class="setup-section hidden">
                             <h4>New Admin Setup</h4>
                             <p>Share this QR code with the new admin:</p>
