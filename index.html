@@ -1745,58 +1745,108 @@
                     </div>
 
                     <div class="habit-tracker">
-                        <div class="habit-item">
-                            <div class="habit-name">🌅 Morning Routine Completed</div>
+                        <div class="habit-item enhanced-habit-card">
+                            <div class="habit-header">
+                                <div class="habit-name">🌅 Morning Routine Completed</div>
+                                <div class="habit-status">85%</div>
+                            </div>
                             <div class="habit-progress">
                                 <div class="habit-progress-fill" style="width: 85%"></div>
                             </div>
-                            <small style="color: #5d4e37; margin-top: 5px; display: block;">85% this week • 17/20 days
-                                this month</small>
+                            <div class="habit-stats">
+                                <span class="stat-item">17/20 days this month</span>
+                                <span class="stat-item">🔥 12 day streak</span>
+                            </div>
                         </div>
 
-                        <div class="habit-item">
-                            <div class="habit-name">📱 Phone-Free Deep Work</div>
+                        <div class="habit-item enhanced-habit-card">
+                            <div class="habit-header">
+                                <div class="habit-name">📱 Phone-Free Deep Work</div>
+                                <div class="habit-status">72%</div>
+                            </div>
                             <div class="habit-progress">
                                 <div class="habit-progress-fill" style="width: 72%"></div>
                             </div>
-                            <small style="color: #5d4e37; margin-top: 5px; display: block;">72% this week • Average 3.2
-                                hours daily</small>
-                        </div>
-
-                        <div class="habit-item">
-                            <div class="habit-name">📚 Daily Learning (Reading/Audio)</div>
-                            <div class="habit-progress">
-                                <div class="habit-progress-fill" style="width: 90%"></div>
+                            <div class="habit-stats">
+                                <span class="stat-item">3.2 hrs daily avg</span>
+                                <span class="stat-item">📊 +15% vs last week</span>
                             </div>
-                            <small style="color: #5d4e37; margin-top: 5px; display: block;">90% this week • 6.3 hours
-                                this week</small>
                         </div>
 
-                        <div class="habit-item">
-                            <div class="habit-name">🏃‍♂️ Physical Activity</div>
+                        <div class="habit-item enhanced-habit-card audio-tracking">
+                            <div class="habit-header">
+                                <div class="habit-name">🎧 Audio Learning Time</div>
+                                <div class="habit-status time-display" id="audioTimeToday">0 min</div>
+                            </div>
+                            <div class="habit-progress">
+                                <div class="habit-progress-fill audio-progress" style="width: 45%"></div>
+                            </div>
+                            <div class="habit-stats">
+                                <span class="stat-item">Goal: 60 min/day</span>
+                                <span class="stat-item">📈 +20% vs yesterday</span>
+                            </div>
+                            <div class="time-breakdown">
+                                <div class="breakdown-item">
+                                    <span class="content-type">Productivity:</span>
+                                    <span class="time-spent">15 min</span>
+                                </div>
+                                <div class="breakdown-item">
+                                    <span class="content-type">Habits:</span>
+                                    <span class="time-spent">12 min</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="habit-item enhanced-habit-card video-tracking">
+                            <div class="habit-header">
+                                <div class="habit-name">📺 Video Learning Time</div>
+                                <div class="habit-status time-display" id="videoTimeToday">0 min</div>
+                            </div>
+                            <div class="habit-progress">
+                                <div class="habit-progress-fill video-progress" style="width: 60%"></div>
+                            </div>
+                            <div class="habit-stats">
+                                <span class="stat-item">Goal: 45 min/day</span>
+                                <span class="stat-item">🎯 On track</span>
+                            </div>
+                            <div class="time-breakdown">
+                                <div class="breakdown-item">
+                                    <span class="content-type">Masterclasses:</span>
+                                    <span class="time-spent">18 min</span>
+                                </div>
+                                <div class="breakdown-item">
+                                    <span class="content-type">Tutorials:</span>
+                                    <span class="time-spent">9 min</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="habit-item enhanced-habit-card">
+                            <div class="habit-header">
+                                <div class="habit-name">🏃‍♂️ Physical Activity</div>
+                                <div class="habit-status">78%</div>
+                            </div>
                             <div class="habit-progress">
                                 <div class="habit-progress-fill" style="width: 78%"></div>
                             </div>
-                            <small style="color: #5d4e37; margin-top: 5px; display: block;">78% this week • 5/7 days
-                                completed</small>
+                            <div class="habit-stats">
+                                <span class="stat-item">5/7 days completed</span>
+                                <span class="stat-item">💪 Strong week</span>
+                            </div>
                         </div>
 
-                        <div class="habit-item">
-                            <div class="habit-name">🧘‍♀️ Mindfulness Practice</div>
+                        <div class="habit-item enhanced-habit-card">
+                            <div class="habit-header">
+                                <div class="habit-name">🧘‍♀️ Mindfulness Practice</div>
+                                <div class="habit-status">65%</div>
+                            </div>
                             <div class="habit-progress">
                                 <div class="habit-progress-fill" style="width: 65%"></div>
                             </div>
-                            <small style="color: #5d4e37; margin-top: 5px; display: block;">65% this week • 15-minute
-                                average</small>
-                        </div>
-
-                        <div class="habit-item">
-                            <div class="habit-name">😴 Quality Sleep (7+ hours)</div>
-                            <div class="habit-progress">
-                                <div class="habit-progress-fill" style="width: 82%"></div>
+                            <div class="habit-stats">
+                                <span class="stat-item">15 min average</span>
+                                <span class="stat-item">🌱 Building habit</span>
                             </div>
-                            <small style="color: #5d4e37; margin-top: 5px; display: block;">82% this week • 7.3 hours
-                                average</small>
                         </div>
                     </div>
 

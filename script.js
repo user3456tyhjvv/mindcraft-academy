@@ -169,7 +169,7 @@ async function initializeUserTables() {
 
     try {
         console.log('Initializing user tables for:', currentUser.id);
-        
+
         // Ensure profile exists (this will create it if needed)
         await loadOrCreateUserProfile();
 
@@ -261,7 +261,7 @@ async function checkUserSession() {
         if (session) {
             currentUser = session.user;
             console.log('User session found:', currentUser.id);
-            
+
             try {
                 // Initialize user data with better error handling
                 await initializeUserTables();
@@ -652,27 +652,31 @@ function showEditTimeModal(timeBlock, originalTime) {
 
     currentEditingBlock = timeBlock;
     const modal = document.getElementById('editTimeModal');
-    modal.classList.add('active');
-    document.body.style.overflow = 'hidden';
+    if (modal) {
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
 
-    // Pre-fill form with current values
-    const timeRange = originalTime.split(' - ');
-    if (timeRange.length === 2) {
-        document.getElementById('editStartTime').value = convertTo24Hour(timeRange[0]);
-        document.getElementById('editEndTime').value = convertTo24Hour(timeRange[1]);
+        // Pre-fill form with current values
+        const timeRange = originalTime.split(' - ');
+        if (timeRange.length === 2) {
+            document.getElementById('editStartTime').value = convertTo24Hour(timeRange[0]);
+            document.getElementById('editEndTime').value = convertTo24Hour(timeRange[1]);
+        }
+
+        const currentActivity = timeBlock.querySelector('p').textContent;
+        const currentDescription = timeBlock.querySelector('small').textContent;
+
+        document.getElementById('editActivityName').value = currentActivity.replace(/[^\w\s]/gi, '');
+        document.getElementById('editActivityDescription').value = currentDescription;
     }
-
-    const currentActivity = timeBlock.querySelector('p').textContent;
-    const currentDescription = timeBlock.querySelector('small').textContent;
-    
-    document.getElementById('editActivityName').value = currentActivity.replace(/[^\w\s]/gi, '');
-    document.getElementById('editActivityDescription').value = currentDescription;
 }
 
 function closeEditTimeModal() {
     const modal = document.getElementById('editTimeModal');
-    modal.classList.remove('active');
-    document.body.style.overflow = '';
+    if (modal) {
+        modal.classList.remove('active');
+        document.body.style.overflow = '';
+    }
     currentEditingBlock = null;
 }
 
@@ -719,7 +723,7 @@ async function saveEditedTime() {
 
         closeEditTimeModal();
         showNotification('⏰ Time block updated successfully!', 'success');
-        
+
         // Add notification
         await addUserNotification(`✅ Routine updated: ${activityName} scheduled for ${convertTo12Hour(startTime)} - ${convertTo12Hour(endTime)}`, 'success');
 
@@ -906,92 +910,6 @@ async function updateDailyProgress(habitName, completed) {
 
             if (error) throw error;
         } else {
-
-
-// Notification System Functions
-async function loadUserNotifications() {
-    if (!currentUser || !supabaseClient) return;
-
-    try {
-        const { data: notifications, error } = await supabaseClient
-            .from('user_notifications')
-            .select('*')
-            .eq('user_id', currentUser.id)
-            .order('created_at', { ascending: false })
-            .limit(20);
-
-        if (error) throw error;
-
-        userNotifications = notifications || [];
-        updateNotificationUI();
-
-        // Start polling for new notifications
-        if (notificationInterval) clearInterval(notificationInterval);
-        notificationInterval = setInterval(pollForNewNotifications, 30000); // Check every 30 seconds
-
-    } catch (error) {
-        console.error('Error loading notifications:', error);
-    }
-}
-
-async function pollForNewNotifications() {
-    if (!currentUser || !supabaseClient) return;
-
-    try {
-        const lastCheck = userNotifications.length > 0 ? userNotifications[0].created_at : new Date(0).toISOString();
-
-        const { data: newNotifications, error } = await supabaseClient
-            .from('user_notifications')
-            .select('*')
-            .eq('user_id', currentUser.id)
-            .gt('created_at', lastCheck)
-            .order('created_at', { ascending: false });
-
-        if (error) throw error;
-
-        if (newNotifications && newNotifications.length > 0) {
-            userNotifications = [...newNotifications, ...userNotifications];
-            updateNotificationUI();
-            
-            // Show notification for new messages
-            newNotifications.forEach(notification => {
-                showNotification(notification.message, notification.type);
-            });
-        }
-
-    } catch (error) {
-        console.error('Error polling for notifications:', error);
-    }
-}
-
-async function updateDailyProgress(habitName, completed) {
-    if (!currentUser || !supabaseClient) return;
-
-    try {
-        const today = new Date().toISOString().split('T')[0];
-
-        const { data: existing, error: fetchError } = await supabaseClient
-            .from('daily_progress')
-            .select('*')
-            .eq('user_id', currentUser.id)
-            .eq('date', today)
-            .single();
-
-        const progressData = {
-            user_id: currentUser.id,
-            date: today,
-            [habitName]: completed,
-            updated_at: new Date().toISOString()
-        };
-
-        if (existing) {
-            const { error } = await supabaseClient
-                .from('daily_progress')
-                .update(progressData)
-                .eq('id', existing.id);
-
-            if (error) throw error;
-        } else {
             const { error } = await supabaseClient
                 .from('daily_progress')
                 .insert([progressData]);
@@ -1052,14 +970,18 @@ function showProgressCustomization() {
     }
 
     const modal = document.getElementById('progressCustomModal');
-    modal.classList.add('active');
-    document.body.style.overflow = 'hidden';
+    if (modal) {
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
 }
 
 function closeProgressCustomModal() {
     const modal = document.getElementById('progressCustomModal');
-    modal.classList.remove('active');
-    document.body.style.overflow = '';
+    if (modal) {
+        modal.classList.remove('active');
+        document.body.style.overflow = '';
+    }
 }
 
 async function saveProgressCustomization() {
@@ -1068,7 +990,7 @@ async function saveProgressCustomization() {
     try {
         const customHabits = [];
         const habitInputs = document.querySelectorAll('.custom-habit-input');
-        
+
         habitInputs.forEach(input => {
             if (input.value.trim()) {
                 customHabits.push({
@@ -1080,6 +1002,7 @@ async function saveProgressCustomization() {
         });
 
         // Save custom habits to user profile
+        ```text
         const { error } = await supabaseClient
             .from('profiles')
             .update({
@@ -1093,7 +1016,7 @@ async function saveProgressCustomization() {
         closeProgressCustomModal();
         showNotification('✨ Progress tracking customized successfully!', 'success');
         await addUserNotification('🎯 Your personalized progress tracking is now active!', 'success');
-        
+
         // Refresh progress display
         loadCustomProgressTracking();
 
@@ -1312,13 +1235,13 @@ async function handleAuthSubmit(event) {
 
             if (data.user) {
                 closeAuthModal();
-                
+
                 // Show beautiful email confirmation notification
                 showStyledEmailConfirmationNotification(email, name);
-                
+
                 // Also show a quick success notification
                 showStyledNotification('🎉 Account Created!', 'Please check your email to confirm your account and start your journey.', 'success');
-                
+
                 // Track signup in Supabase notifications table
                 try {
                     const { error: notifError } = await supabaseClient
@@ -1330,12 +1253,12 @@ async function handleAuthSubmit(event) {
                             is_read: false,
                             created_at: new Date().toISOString()
                         }]);
-                    
+
                     if (notifError) console.warn('Failed to create welcome notification:', notifError);
                 } catch (err) {
                     console.warn('Error creating signup notification:', err);
                 }
-                
+
             } else {
                 showStyledNotification('❌ Error', 'Signup failed. Please try again.', 'error');
             }
@@ -1394,12 +1317,12 @@ async function handleAuthSubmit(event) {
 
                     const userName = currentUser.user_metadata?.name || currentUser.email?.split('@')[0];
                     showStyledNotification('🎉 Welcome Back!', `Great to see you again, ${userName}! Your progress is ready to continue.`, 'success');
-                    
+
                     // Show progress summary
                     setTimeout(() => {
                         showProgressSummary();
                     }, 2000);
-                    
+
                 } catch (profileError) {
                     console.error('Profile loading error:', profileError);
                     showStyledNotification('⚠️ Login Issue', 'Login successful but there was an issue loading your profile. Some features may be limited.', 'warning');
@@ -1448,14 +1371,14 @@ async function handleAuthSubmit(event) {
 function showStyledNotification(title, message, type = 'info') {
     const notification = document.createElement('div');
     notification.className = 'styled-notification-modal';
-    
+
     const icons = {
         success: '🎉',
         error: '❌',
         warning: '⚠️',
         info: 'ℹ️'
     };
-    
+
     notification.innerHTML = `
         <div class="styled-notification-overlay">
             <div class="styled-notification-content ${type}">
@@ -1470,10 +1393,10 @@ function showStyledNotification(title, message, type = 'info') {
             </div>
         </div>
     `;
-    
+
     document.body.appendChild(notification);
     setTimeout(() => notification.classList.add('show'), 100);
-    
+
     // Auto remove after 8 seconds
     setTimeout(() => {
         if (notification.parentElement) {
@@ -1595,7 +1518,7 @@ async function loadOrCreateUserProfile() {
 
     try {
         console.log('Loading profile for user:', currentUser.id);
-        
+
         // First, try to get existing profile with retries
         for (let attempt = 0; attempt < 3; attempt++) {
             const { data: existingProfile, error: selectError } = await supabaseClient
@@ -1618,7 +1541,7 @@ async function loadOrCreateUserProfile() {
 
             // Profile doesn't exist, try to create it
             console.log('No profile found, creating new profile...');
-            
+
             const profileData = {
                 id: currentUser.id,
                 email: currentUser.email,
@@ -1655,10 +1578,10 @@ async function loadOrCreateUserProfile() {
 
     } catch (error) {
         console.error('Error in loadOrCreateUserProfile:', error);
-        
+
         // Don't show error notification for profile issues, just log
         console.warn('Profile creation failed, continuing with limited functionality');
-        
+
         // Return a basic profile object to prevent further errors
         return {
             id: currentUser.id,
@@ -1668,8 +1591,6 @@ async function loadOrCreateUserProfile() {
         };
     }
 }
-
-
 
 // Notification UI Functions
 function updateNotificationUI() {
@@ -1713,7 +1634,7 @@ function toggleNotifications() {
     const dropdown = document.getElementById('notificationDropdown');
     if (dropdown) {
         dropdown.classList.toggle('active');
-        
+
         // Close dropdown when clicking outside
         if (dropdown.classList.contains('active')) {
             setTimeout(() => {
@@ -1766,7 +1687,7 @@ async function markAllAsRead() {
         // Update local notifications
         userNotifications = userNotifications.map(n => ({ ...n, is_read: true }));
         updateNotificationUI();
-        
+
         showNotification('All notifications marked as read', 'success');
     } catch (error) {
         console.error('Error marking all notifications as read:', error);
@@ -1780,15 +1701,15 @@ async function initializeUserSystems() {
         // Load user notifications and data
         await loadUserNotifications();
         await addWelcomeNotification();
-        
+
         // Initialize progress tracking
         await initializeProgressTracking();
-        
+
         // Start tracking session
         await startProgressSession();
-        
+
         console.log('User systems initialized successfully');
-        
+
     } catch (error) {
         console.error('Error initializing user systems:', error);
     }
@@ -1800,7 +1721,7 @@ async function initializeProgressTracking() {
     try {
         // Initialize today's progress tracking
         const today = new Date().toISOString().split('T')[0];
-        
+
         const { data: existing, error: checkError } = await supabaseClient
             .from('daily_progress')
             .select('*')
@@ -1856,7 +1777,7 @@ async function startProgressSession() {
 
         // Refresh notifications
         await loadUserNotifications();
-        
+
     } catch (error) {
         console.error('Error starting progress session:', error);
     }
@@ -1885,7 +1806,7 @@ async function showProgressSummary() {
             `You've been active ${completedDays} out of the last 7 days. Keep building that momentum!`, 
             'info'
         );
-        
+
     } catch (error) {
         console.error('Error showing progress summary:', error);
     }
@@ -1972,25 +1893,6 @@ function formatNotificationTime(timestamp) {
         return `${Math.floor(diffInHours)}h ago`;
     } else {
         return `${Math.floor(diffInHours / 24)}d ago`;
-    }
-}
-
-function toggleNotifications() {
-    const dropdown = document.getElementById('notificationDropdown');
-    if (dropdown) {
-        dropdown.classList.toggle('active');
-        
-        // Close dropdown when clicking outside
-        if (dropdown.classList.contains('active')) {
-            setTimeout(() => {
-                document.addEventListener('click', function closeDropdown(e) {
-                    if (!dropdown.contains(e.target) && !document.getElementById('notificationBell').contains(e.target)) {
-                        dropdown.classList.remove('active');
-                        document.removeEventListener('click', closeDropdown);
-                    }
-                });
-            }, 100);
-        }
     }
 }
 

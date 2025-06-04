@@ -51,6 +51,8 @@ CREATE TABLE daily_progress (
     exercise_completed BOOLEAN DEFAULT FALSE,
     meditation_done BOOLEAN DEFAULT FALSE,
     reading_done BOOLEAN DEFAULT FALSE,
+    audio_time INTEGER DEFAULT 0, -- in seconds
+    video_time INTEGER DEFAULT 0, -- in seconds
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     UNIQUE(user_id, date)
 );
