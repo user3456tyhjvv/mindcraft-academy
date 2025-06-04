@@ -1573,7 +1573,45 @@
                 </div>
             </div>
 
-            <!-- Videos Tab -->
+            <!-- Premium Audio Library Section -->
+                <div id="premiumAudio" class="premium-content" style="display: none;">
+                    <div class="premium-header">
+                        <span class="premium-icon">🎧</span>
+                        <h3>Premium Audio Library</h3>
+                        <span class="premium-badge">Premium Only</span>
+                    </div>
+                    <p style="color: #5d4e37; margin-bottom: 20px;">Unlock exclusive premium audiobooks and extended meditation sessions:</p>
+
+                    <div class="media-grid">
+                        <div class="media-player locked-content" data-track="premium-mindset-mastery">
+                            <h4>🧠 Mindset Mastery (Extended)</h4>
+                            <p>2.5 hours of deep transformation techniques</p>
+                            <div class="media-controls">
+                                <button class="play-button" onclick="playPremiumAudio('premium-mindset-mastery')">▶</button>
+                                <div class="progress-bar">
+                                    <div class="progress-fill"></div>
+                                </div>
+                                <span class="time-display">0:00 / 2:30:00</span>
+                                <button class="download-btn" onclick="downloadAudio('premium-mindset-mastery')">⬇️</button>
+                            </div>
+                        </div>
+
+                        <div class="media-player locked-content" data-track="premium-wealth-consciousness">
+                            <h4>💰 Wealth Consciousness Blueprint</h4>
+                            <p>Complete 3-hour wealth programming series</p>
+                            <div class="media-controls">
+                                <button class="play-button" onclick="playPremiumAudio('premium-wealth-consciousness')">▶</button>
+                                <div class="progress-bar">
+                                    <div class="progress-fill"></div>
+                                </div>
+                                <span class="time-display">0:00 / 3:00:00</span>
+                                <button class="download-btn" onclick="downloadAudio('premium-wealth-consciousness')">⬇️</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Video Library Section -->
             <div id="videos" class="tab-content">
                 <div class="section-header">
                     <h2 class="section-title">Video Masterclasses</h2>
@@ -1967,88 +2005,7 @@
                                 <p style="color: #5d4e37; margin-top: 5px;">Finished 2 audiobooks this month</p>
                             </div>
                             <div
-                                style="background: white; padding: 15px; border-radius: 10px; border-left: 4px solid #d4af37;">
-                                <strong style="color: #2c1810;">Anxiety Management</strong>
-                                <p style="color: #5d4e37; margin-top: 5px;">7 days using breathing techniques</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="cta-section">
-                    <h3 class="cta-title">Your Progress is Powerful</h3>
-                    <p style="color: #5d4e37; margin-bottom: 30px;">Every small win compounds into extraordinary
-                        transformation</p>
-                    <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
-                        <button class="cta-button" onclick="updateProgress()">Update Today's Progress</button>
-                        <button class="cta-button" onclick="showProgressCustomization()"
-                            style="background: linear-gradient(45deg, #8b4513, #d4af37);">
-                            🎯 Customize Tracking
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Newsletter Tab -->
-            <div id="community" class="tab-content">
-                <div class="section-header">
-                    <h2 class="section-title">The MindCraft Weekly</h2>
-                    <p style="color: #5d4e37; font-size: 1.1rem;">Join 50,000+ young minds receiving weekly insights,
-                        challenges, and success stories.</p>
-                </div>
-
-                <div class="newsletter-signup">
-                    <div class="newsletter-content">
-                        <h3 class="newsletter-title">Transform Your Inbox</h3>
-                        <p style="font-size: 1.2rem; margin-bottom: 20px; opacity: 0.95;">Every Sunday, get the
-                            strategies, stories, and science that successful people use to level up their lives.</p>
-
-                        <div
-                            style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin: 30px 0; text-align: left;">
-                            <div
-                                style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 10px; border: 1px solid rgba(212,175,55,0.3);">
-                                <h4 style="margin-bottom: 10px;">📧 Weekly Deep Dive</h4>
-                                <p style="opacity: 0.9;">One powerful concept explored in depth, with practical steps
-                                    you can implement immediately.</p>
-                            </div>
-                            <div
-                                style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 10px; border: 1px solid rgba(212,175,55,0.3);">
-                                <h4 style="margin-bottom: 10px;">🏆 Success Stories</h4>
-                                <p style="opacity: 0.9;">Real transformations from community members who broke through
-                                    their limitations.</p>
-                            </div>
-                            <div
-                                style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 10px; border: 1px solid rgba(212,175,55,0.3);">
-                                <h4 style="margin-bottom: 10px;">🧪 Science-Backed Tips</h4>
-                                <p style="opacity: 0.9;">Latest research on productivity, psychology, and peak
-                                    performance made practical.</p>
-                            </div>
-                            <div
-                                style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 10px; border: 1px solid rgba(212,175,55,0.3);">
-                                <h4 style="margin-bottom: 10px;">💪 Weekly Challenge</h4>
-                                <p style="opacity: 0.9;">A specific action to push your comfort zone and accelerate your
-                                    growth.</p>
-                            </div>
-                        </div>
-
-                        <form class="email-form" onsubmit="subscribeNewsletter(event)">
-                            <input type="email" class="email-input" placeholder="Enter your email address" required>
-                            <button type="submit" class="subscribe-btn">Join the Movement</button>
-                        </form>
-
-                        <p style="margin-top: 20px; opacity: 0.8; font-size: 0.9rem;">Join the 50,000+ ambitious minds
-                            already transforming their lives. Unsubscribe anytime.</p>
-                    </div>
-                </div>
-
-                <div style="margin-top: 40px;">
-                    <h3
-                        style="text-align: center; font-family: 'Playfair Display', serif; font-size: 2rem; color: #2c1810; margin-bottom: 30px;">
-                        Recent Newsletter Highlights</h3>
-
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px;">
-                        <div
-                            style="background: white; padding: 25px; border-radius: 15px; box-shadow: 0 8px 25px rgba(0,0,0,0.1); border-left: 4px solid #d4af37;">
+                                style="background: white; padding: 25px; border-radius: 15px; box-shadow: 0 8px 25px rgba(0,0,0,0.1); border-left: 4px solid #d4af37;">
                             <h4 style="color: #2c1810; margin-bottom: 15px; font-size: 1.2rem;">Issue #47: The Anxiety
                                 Advantage</h4>
                             <p style="color: #5d4e37; line-height: 1.6; margin-bottom: 15px;">"The same nervous energy

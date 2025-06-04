@@ -1,4 +1,3 @@
-
 // Admin Panel JavaScript
 const SUPABASE_URL = 'https://ytqxknpcybvjameqtjpu.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl0cXhrbnBjeWJ2amFtZXF0anB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg5NDIzMjUsImV4cCI6MjA2NDUxODMyNX0.s0Aww5v7NX7aigQ6kFR_rCi9z8FUrwCFb5c9qhCKmhI';
@@ -31,15 +30,15 @@ function generateTOTPSecret() {
 function generateTOTP(secret, window = 0) {
     const epoch = Math.round(new Date().getTime() / 1000.0);
     const time = Math.floor(epoch / 30) + window;
-    
+
     const timeHex = time.toString(16).padStart(16, '0');
     const key = base32Decode(secret);
     const hmac = CryptoJS.HmacSHA1(CryptoJS.enc.Hex.parse(timeHex), CryptoJS.enc.Hex.parse(Array.from(key).map(b => b.toString(16).padStart(2, '0')).join('')));
-    
+
     const hmacHex = hmac.toString(CryptoJS.enc.Hex);
     const offset = parseInt(hmacHex.slice(-1), 16);
     const otp = ((parseInt(hmacHex.substr(offset * 2, 8), 16) & 0x7fffffff) % 1000000).toString().padStart(6, '0');
-    
+
     return otp;
 }
 
@@ -48,20 +47,20 @@ function base32Decode(encoded) {
     let bits = '';
     let value = 0;
     let bytes = [];
-    
+
     for (let i = 0; i < encoded.length; i++) {
         const index = alphabet.indexOf(encoded[i].toUpperCase());
         if (index === -1) continue;
-        
+
         value = (value << 5) | index;
         bits += 5;
-        
+
         if (bits >= 8) {
             bytes.push((value >>> (bits - 8)) & 255);
             bits -= 8;
         }
     }
-    
+
     return new Uint8Array(bytes);
 }
 
@@ -125,17 +124,17 @@ async function createAdminTables() {
 function showSetupPhase() {
     document.getElementById('setupPhase').classList.remove('hidden');
     document.getElementById('loginPhase').classList.add('hidden');
-    
+
     const secret = generateTOTPSecret();
     document.getElementById('secretKey').textContent = secret;
-    
+
     // Generate QR code - ensure QRCode library is loaded
     const qrData = `otpauth://totp/MindCraft%20Academy:Admin?secret=${secret}&issuer=MindCraft%20Academy`;
-    
+
     // Clear any existing content
     const qrContainer = document.getElementById('qrcode');
     qrContainer.innerHTML = '';
-    
+
     // Try to generate QR code with fallback
     setTimeout(() => {
         if (typeof QRCode !== 'undefined') {
@@ -165,7 +164,7 @@ function showSetupPhase() {
             showQRFallback(qrContainer, qrData, secret);
         }
     }, 100);
-    
+
     // Store the secret for verification
     window.tempAdminSecret = secret;
 }
@@ -196,14 +195,14 @@ function showLoginPhase() {
 
 async function verifyAccess() {
     const code = document.getElementById('totpCode').value;
-    
+
     if (code.length !== 6 || !/^\d{6}$/.test(code)) {
         alert('Please enter a valid 6-digit code');
         return;
     }
 
     let verified = false;
-    
+
     // Check if this is setup phase
     if (window.tempAdminSecret) {
         if (verifyTOTP(code, window.tempAdminSecret)) {
@@ -246,7 +245,7 @@ async function saveAdminSecret(secret, name) {
             ]);
 
         if (error) throw error;
-        
+
         currentAdmin = { secret, name, is_active: true };
         adminSecrets.push(currentAdmin);
     } catch (error) {
@@ -260,18 +259,18 @@ function showSection(sectionName) {
     document.querySelectorAll('.content-section').forEach(section => {
         section.classList.remove('active');
     });
-    
+
     // Remove active class from all sidebar items
     document.querySelectorAll('.sidebar-item').forEach(item => {
         item.classList.remove('active');
     });
-    
+
     // Show selected section
     document.getElementById(sectionName).classList.add('active');
-    
+
     // Add active class to clicked sidebar item
     event.target.classList.add('active');
-    
+
     // Load section-specific data
     if (sectionName === 'users') {
         loadUsers();
@@ -291,7 +290,7 @@ async function loadDashboardData() {
         if (!profileError && profiles) {
             const totalUsers = profiles.length;
             const premiumUsers = profiles.filter(p => p.subscription_status === 'premium').length;
-            
+
             document.getElementById('totalUsers').textContent = totalUsers;
             document.getElementById('premiumUsers').textContent = premiumUsers;
         }
@@ -321,7 +320,7 @@ async function loadDashboardData() {
 // Content Management Functions
 async function addAudioTrack(event) {
     event.preventDefault();
-    
+
     const formData = new FormData(event.target);
     const audioData = {
         title: formData.get('title'),
@@ -330,7 +329,8 @@ async function addAudioTrack(event) {
         audio_url: formData.get('audioUrl'),
         description: formData.get('description'),
         created_at: new Date().toISOString(),
-        created_by: currentAdmin.name
+        created_by: currentAdmin.name,
+        type: formData.get('type')
     };
 
     try {
@@ -351,7 +351,7 @@ async function addAudioTrack(event) {
 
 async function addVideo(event) {
     event.preventDefault();
-    
+
     const formData = new FormData(event.target);
     const videoData = {
         title: formData.get('title'),
@@ -381,7 +381,7 @@ async function addVideo(event) {
 
 async function addJourneyContent(event) {
     event.preventDefault();
-    
+
     const formData = new FormData(event.target);
     const journeyData = {
         title: formData.get('title'),
@@ -427,7 +427,7 @@ async function loadAudioContent() {
                 <div class="item-info">
                     <h4>${track.title}</h4>
                     <p>${track.description.substring(0, 100)}...</p>
-                    <small>Duration: ${track.duration} | Narrator: ${track.narrator}</small>
+                    <small>Duration: ${track.duration} | Narrator: ${track.narrator} | Type: ${track.type}</small>
                 </div>
                 <div class="item-actions">
                     <button class="edit-btn" onclick="editAudioTrack(${track.id})">Edit</button>
@@ -536,7 +536,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const message = messageInput.value || 'Your notification message will appear here...';
             const type = typeSelect.value;
             const icons = { info: 'ℹ️', success: '✅', warning: '⚠️', error: '❌' };
-            
+
             preview.innerHTML = `
                 <div style="display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: 5px; background: #f8f9fa;">
                     <span>${icons[type]}</span>
@@ -548,7 +548,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     if (messageInput) messageInput.addEventListener('input', updatePreview);
     if (typeSelect) typeSelect.addEventListener('change', updatePreview);
-    
+
     updatePreview();
 });
 
@@ -587,10 +587,10 @@ async function sendNotification() {
 
         alert('Notification queued successfully!');
         document.getElementById('notificationMessage').value = '';
-        
+
         // In a real implementation, you would trigger the notification system here
         console.log('Notification sent:', notificationData);
-        
+
     } catch (error) {
         console.error('Error sending notification:', error);
         alert('Error sending notification');
@@ -668,7 +668,7 @@ async function loadAdmins() {
 
 async function generateAdminAccess() {
     const adminName = document.getElementById('adminName').value;
-    
+
     if (!adminName.trim()) {
         alert('Please enter an admin name/identifier');
         return;
@@ -681,17 +681,17 @@ async function generateAdminAccess() {
     }
 
     const secret = generateTOTPSecret();
-    
+
     try {
         await saveAdminSecret(secret, adminName);
-        
+
         // Show QR code
         document.getElementById('newAdminSecret').textContent = secret;
         const qrData = `otpauth://totp/MindCraft%20Academy:${adminName}?secret=${secret}&issuer=MindCraft%20Academy`;
-        
+
         const qrContainer = document.getElementById('newAdminQRCode');
         qrContainer.innerHTML = '';
-        
+
         // Generate QR code with fallback
         setTimeout(() => {
             if (typeof QRCode !== 'undefined') {
@@ -718,12 +718,12 @@ async function generateAdminAccess() {
                 showNewAdminQRFallback(qrContainer, qrData, secret, adminName);
             }
         }, 100);
-        
+
         document.getElementById('newAdminQR').classList.remove('hidden');
         document.getElementById('adminName').value = '';
-        
+
         await loadAdmins();
-        
+
     } catch (error) {
         console.error('Error generating admin access:', error);
         alert('Error generating admin access');

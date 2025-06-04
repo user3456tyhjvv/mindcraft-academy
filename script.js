@@ -487,6 +487,21 @@ function downloadAudio(trackName) {
     trackAudioProgress(safeTrackName, 'downloaded');
 }
 
+function playPremiumAudio(trackName) {
+    if (!currentUser) {
+        showNotification('Please log in to access premium content', 'warning');
+        return;
+    }
+
+    if (userSubscription?.status !== 'premium') {
+        showPremiumModal();
+        return;
+    }
+
+    showNotification(`🎧 Loading premium audio: ${trackName.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}`, 'info');
+    trackAudioProgress(trackName, 'started');
+}
+
 function downloadVideo(videoName) {
     if (!currentUser) {
         showNotification('Please log in to download video files', 'warning');
@@ -613,6 +628,11 @@ function showPremiumContent() {
     const premiumVideos = document.getElementById('premiumVideos');
     if (premiumVideos) {
         premiumVideos.style.display = 'block';
+    }
+
+    const premiumAudio = document.getElementById('premiumAudio');
+    if (premiumAudio) {
+        premiumAudio.style.display = 'block';
     }
 
     // Remove locked overlays

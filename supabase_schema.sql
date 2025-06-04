@@ -134,6 +134,7 @@ CREATE TABLE admin_audio_content (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     title TEXT NOT NULL,
     duration TEXT NOT NULL,
+    type TEXT NOT NULL CHECK (type IN ('free', 'premium')),
     narrator TEXT NOT NULL,
     audio_url TEXT NOT NULL,
     description TEXT NOT NULL,

@@ -1,6 +1,6 @@
 // Editing Functionality
-let editingMode = false;
-let currentEditingBlock = null;
+var editingMode = false;
+var currentEditingBlock = null;
 
 // Routine Management Functions
 function selectBlock(element, time) {
@@ -379,15 +379,4 @@ async function saveRoutine() {
     }
 }
 
-// Global variables that might be needed
-if (typeof currentEditingBlock === 'undefined') {
-    var currentEditingBlock = null;
-}
-
-if (typeof currentUser === 'undefined') {
-    var currentUser = null;
-}
-
-if (typeof supabaseClient === 'undefined') {
-    var supabaseClient = null;
-}
+// Global variables initialized at top of file
