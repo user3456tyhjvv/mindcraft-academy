@@ -37,7 +37,8 @@ CREATE TABLE user_routines (
     activity_name TEXT NOT NULL,
     activity_description TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    is_active BOOLEAN DEFAULT TRUE
+    is_active BOOLEAN DEFAULT TRUE,
+    UNIQUE(user_id, start_time)
 );
 
 -- Daily progress tracking

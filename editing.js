@@ -1,8 +1,8 @@
 // Editing Functionality
-var editingMode = false;
-var currentEditingBlock = null;
+// Routine Management and Editing Functions
 
-// Routine Management Functions
+let currentEditingBlock = null;
+
 function selectBlock(element, time) {
     if (!currentUser) {
         showNotification('Please log in to customize your routine', 'warning');
@@ -25,7 +25,6 @@ function selectBlock(element, time) {
     }
 }
 
-// Time Editing Functions
 function showEditTimeModal(timeBlock, originalTime) {
     if (!currentUser) {
         showNotification('Please log in to edit your routine', 'warning');
@@ -75,7 +74,7 @@ async function saveEditedTime() {
 
     try {
         if (currentEditingBlock && supabaseClient && currentUser) {
-            // Save to database
+            // Save to database - use insert with proper error handling instead of upsert
             const routineItem = {
                 user_id: currentUser.id,
                 start_time: startTime,
@@ -85,11 +84,30 @@ async function saveEditedTime() {
                 created_at: new Date().toISOString()
             };
 
-            const { error } = await supabaseClient
+            // First try to update existing routine
+            const { data: existing, error: selectError } = await supabaseClient
                 .from('user_routines')
-                .upsert([routineItem], { onConflict: 'user_id,start_time' });
+                .select('id')
+                .eq('user_id', currentUser.id)
+                .eq('start_time', startTime)
+                .single();
 
-            if (error) throw error;
+            if (existing) {
+                // Update existing routine
+                const { error: updateError } = await supabaseClient
+                    .from('user_routines')
+                    .update(routineItem)
+                    .eq('id', existing.id);
+
+                if (updateError) throw updateError;
+            } else {
+                // Insert new routine
+                const { error: insertError } = await supabaseClient
+                    .from('user_routines')
+                    .insert([routineItem]);
+
+                if (insertError) throw insertError;
+            }
         }
 
         // Update UI
@@ -210,6 +228,11 @@ async function saveTimeEdit() {
 
 // Progress Customization Functions
 function showProgressCustomization() {
+    if (!currentUser) {
+        showNotification('Please log in to customize your progress tracking', 'warning');
+        return;
+    }
+
     const modal = document.getElementById('progressCustomModal');
     if (modal) {
         modal.classList.add('active');
@@ -346,8 +369,12 @@ async function trackRoutineChange(action, time) {
     if (!currentUser || !supabaseClient) return;
 
     try {
-        await addUserNotification(`📅 Routine ${action}: ${time}`, 'info');
-        await updateDailyProgress('routine_created', true);
+        if (typeof addUserNotification === 'function') {
+            await addUserNotification(`📅 Routine ${action}: ${time}`, 'info');
+        }
+        if (typeof updateDailyProgress === 'function') {
+            await updateDailyProgress('routine_created', true);
+        }
     } catch (error) {
         console.error('Error tracking routine change:', error);
     }
@@ -367,11 +394,15 @@ async function saveRoutine() {
 
     try {
         // Save routine completion in progress tracking
-        await updateDailyProgress('routine_created', true);
+        if (typeof updateDailyProgress === 'function') {
+            await updateDailyProgress('routine_created', true);
+        }
         showNotification(`🏆 Routine Saved! You've selected ${selectedBlocks.length} time blocks.`, 'success');
 
         // Show better notification when routine is locked in
-        await addUserNotification(`🎯 Routine Locked In! You've committed to ${selectedBlocks.length} productive time blocks today. Every action you take builds unstoppable momentum toward your goals!`, 'success');
+        if (typeof addUserNotification === 'function') {
+            await addUserNotification(`🎯 Routine Locked In! You've committed to ${selectedBlocks.length} productive time blocks today. Every action you take builds unstoppable momentum toward your goals!`, 'success');
+        }
 
     } catch (error) {
         console.error('Error saving routine:', error);
@@ -379,4 +410,64 @@ async function saveRoutine() {
     }
 }
 
+// Progress Customization Functions
+function showProgressCustomization() {
+    if (!currentUser) {
+        showNotification('Please log in to customize your progress tracking', 'warning');
+        return;
+    }
+
+    const modal = document.getElementById('progressCustomizationModal');
+    if (modal) {
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+function closeProgressCustomization() {
+    const modal = document.getElementById('progressCustomizationModal');
+    if (modal) {
+        modal.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+}
+
+async function saveProgressCustomization() {
+    const inputs = document.querySelectorAll('.custom-habit-input');
+    const customHabits = [];
+
+    inputs.forEach(input => {
+        if (input.value.trim()) {
+            customHabits.push({
+                category: input.dataset.category,
+                habit: input.value.trim()
+            });
+        }
+    });
+
+    if (customHabits.length === 0) {
+        showNotification('Please add at least one custom habit', 'warning');
+        return;
+    }
+
+    try {
+        // In a real app, save to database
+        console.log('Saving custom habits:', customHabits);
+
+        closeProgressCustomModal();
+        showNotification(`🎯 Added ${customHabits.length} custom habits to track!`, 'success');
+
+        if (typeof addUserNotification === 'function') {
+            await addUserNotification(`📊 Progress tracking customized with ${customHabits.length} new habits`, 'success');
+        }
+
+    } catch (error) {
+        console.error('Error saving custom habits:', error);
+        showNotification('Error saving custom habits', 'error');
+    }
+}
+
+// Time Conversion Utilities
+
 // Global variables initialized at top of file
+var editingMode = false;
