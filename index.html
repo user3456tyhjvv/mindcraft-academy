@@ -980,7 +980,7 @@
             animation: fadeInUp 0.8s ease-out;
         }
 
-        
+
 
         .profile-menu {
             position: absolute;
@@ -1276,6 +1276,10 @@
             }
         }
     </style>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="notifications.js"></script>
+    <script src="editing.js"></script>
+    <script src="script.js"></script>
 </head>
 
 <body>
@@ -1302,7 +1306,7 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="profile-image" id="profileInitial">U</div>
                     <div class="profile-name" id="profileName">User</div>
                     <div class="profile-menu" id="profileMenu">
@@ -2026,7 +2030,7 @@
                 <div style="font-size: 3rem; color: #d4af37; margin-bottom: 10px;">$10</div>
                 <p style="color: #5d4e37; font-size: 1.1rem;">per month</p>
             </div>
-            
+
             <div style="background: #f9f6f0; padding: 20px; border-radius: 10px; margin-bottom: 25px;">
                 <h4 style="color: #2c1810; margin-bottom: 15px;">Premium Features:</h4>
                 <ul style="color: #5d4e37; line-height: 1.8;">
@@ -2050,7 +2054,7 @@
             <button class="form-button" onclick="processPremiumSubscription()">
                 🚀 Upgrade to Premium
             </button>
-            
+
             <p style="text-align: center; margin-top: 15px; font-size: 0.9rem; color: #5d4e37;">
                 Cancel anytime. 30-day money-back guarantee.
             </p>
@@ -2082,7 +2086,7 @@
         </div>
     </div>
 
-    
+
 
     <!-- Edit Time Modal -->
     <div class="auth-modal" id="editTimeModal">
@@ -2115,30 +2119,30 @@
             <button class="close-modal" onclick="closeProgressCustomModal()">&times;</button>
             <h2 class="form-title">🎯 Customize Your Progress Tracking</h2>
             <p style="color: #5d4e37; margin-bottom: 25px; text-align: center;">Add your personal goals and habits to track</p>
-            
+
             <div style="background: #f9f6f0; padding: 20px; border-radius: 10px; margin-bottom: 25px;">
                 <h4 style="color: #2c1810; margin-bottom: 15px;">💡 Recommended Categories:</h4>
-                
+
                 <div class="form-group">
                     <label>🧘 Mindfulness & Mental Health</label>
                     <input type="text" class="form-input custom-habit-input" data-category="mindfulness" placeholder="e.g., 10 minutes meditation, journaling">
                 </div>
-                
+
                 <div class="form-group">
                     <label>💪 Physical Health</label>
                     <input type="text" class="form-input custom-habit-input" data-category="health" placeholder="e.g., 8 glasses of water, 30-min exercise">
                 </div>
-                
+
                 <div class="form-group">
                     <label>🎯 Productivity & Skills</label>
                     <input type="text" class="form-input custom-habit-input" data-category="productivity" placeholder="e.g., Learn new skill, complete priorities">
                 </div>
-                
+
                 <div class="form-group">
                     <label>👥 Relationships & Social</label>
                     <input type="text" class="form-input custom-habit-input" data-category="social" placeholder="e.g., Call family, help someone">
                 </div>
-                
+
                 <div class="form-group">
                     <label>🌱 Personal Growth</label>
                     <input type="text" class="form-input custom-habit-input" data-category="growth" placeholder="e.g., Practice gratitude, learn something new">
@@ -2210,7 +2214,7 @@
         document.addEventListener('DOMContentLoaded', function () {
             // Initialize Supabase first
             setTimeout(initializeSupabase, 100);
-            
+
             // Check for existing session
             setTimeout(checkSession, 200);
 
@@ -2274,7 +2278,7 @@
             if (!trackName || typeof trackName !== 'string') {
                 trackName = 'unknown-track';
             }
-            
+
             if (button.innerHTML === '▶') {
                 button.innerHTML = '⏸';
                 button.style.background = '#8b4513';
@@ -2302,7 +2306,7 @@
             const link = document.createElement('a');
             link.href = `#download-${trackName}`;
             link.download = `${trackName}.mp3`;
-            
+
             showNotification(`Downloading: ${trackName}`, 'success');
             // Simulate download
             console.log(`Download initiated for: ${trackName}`);
@@ -2324,7 +2328,7 @@
                 showAuthModal('login');
                 return;
             }
-            
+
             const premiumModal = document.getElementById('premiumModal');
             if (premiumModal) {
                 premiumModal.classList.add('active');
@@ -2342,13 +2346,13 @@
 
         async function processPremiumSubscription() {
             const paymentMethod = document.getElementById('paymentMethod').value;
-            
+
             try {
                 showNotification('Processing payment...', 'info');
-                
+
                 // Simulate payment processing
                 await new Promise(resolve => setTimeout(resolve, 2000));
-                
+
                 if (supabaseClient && currentUser) {
                     // Update user subscription in Supabase
                     const { error } = await supabaseClient
@@ -2357,7 +2361,7 @@
                             subscription_status: 'premium',
                             subscription_start_date: new Date().toISOString(),
                             subscription_end_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-                            payment_method: paymentMethod
+                            payment_method: paymentmentMethod
                         })
                         .eq('id', currentUser.id);
 
@@ -2372,7 +2376,7 @@
                 showPremiumContent();
                 closePremiumModal();
                 showNotification('🎉 Welcome to Premium! You now have access to all exclusive content!', 'success');
-                
+
             } catch (error) {
                 console.error('Payment error:', error);
                 showNotification('Payment failed. Please try again.', 'error');
@@ -2483,7 +2487,7 @@
             try {
                 if (formType === 'signup') {
                     const name = document.getElementById('name').value;
-                    
+
                     const {data, error} = await supabaseClient.auth.signUp({
                         email: email,
                         password: password,
@@ -2677,59 +2681,19 @@
                 userSubscription = null;
                 updateUserUI();
                 showNotification('👋 You have been logged out successfully.', 'success');
-                
+
                 // Hide premium content
                 const premiumVideos = document.getElementById('premiumVideos');
                 if (premiumVideos) {
                     premiumVideos.style.display = 'none';
                 }
-                
+
                 if (profileMenu) {
                     profileMenu.classList.remove('active');
                 }
             } catch (error) {
                 console.error('Logout error:', error);
                 showNotification('Logout failed. Please try again.', 'error');
-            }
-        }
-
-        // Notification System
-        function showNotification(message, type = 'info') {
-            let container = document.getElementById('notificationContainer');
-            if (!container) {
-                container = document.createElement('div');
-                container.id = 'notificationContainer';
-                container.className = 'notification-container';
-                document.body.appendChild(container);
-            }
-
-            const notification = document.createElement('div');
-            notification.className = `notification notification-${type}`;
-            notification.innerHTML = `
-                <div class="notification-content">
-                    <span class="notification-icon">${getNotificationIcon(type)}</span>
-                    <span class="notification-message">${message}</span>
-                    <button class="notification-close" onclick="this.parentElement.parentElement.remove()">×</button>
-                </div>
-            `;
-
-            container.appendChild(notification);
-            setTimeout(() => notification.classList.add('show'), 100);
-
-            setTimeout(() => {
-                if (notification.parentElement) {
-                    notification.classList.remove('show');
-                    setTimeout(() => notification.remove(), 300);
-                }
-            }, 5000);
-        }
-
-        function getNotificationIcon(type) {
-            switch (type) {
-                case 'success': return '✅';
-                case 'error': return '❌';
-                case 'warning': return '⚠️';
-                default: return 'ℹ️';
             }
         }
 
