@@ -1,8 +1,23 @@
 
 // Notification System
 let userNotifications = [];
-let notificationInterval = null;
+let notificationInterval = null
 
+
+function toggleNotifications() {
+    const dropdown = document.getElementById('notificationDropdown');
+    if (dropdown)
+        dropdown.classList.toggle('active');
+        if (dropdown.classList.contains('active'))
+            setTimeout(() =>
+                document.addEventListener('click', function closeDropdown(e)
+                                            if (!dropdown.contains(e.target) && !document.getElementById('notificationBell').contains(e.target)) {
+                                                dropdown.classList.remove('active');
+                                                document.removeEventListener('click', closeDropdown);
+                                            }                                                
+                                            });
+                                            }, 100);
+}
 // Notification UI Functions
 function updateNotificationUI() {
     const notificationBell = document.getElementById('notificationBell');
