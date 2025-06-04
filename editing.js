@@ -1,4 +1,3 @@
-
 // Editing Functionality
 let editingMode = false;
 let currentEditingBlock = null;

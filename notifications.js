@@ -289,6 +289,116 @@ function showStyledNotification(title, message, type = 'info') {
     }, 8000);
 }
 
+function toggleNotifications() {
+    const dropdown = document.getElementById('notificationDropdown');
+    if (dropdown) {
+        dropdown.classList.toggle('active');
+
+        // Close dropdown when clicking outside
+        if (dropdown.classList.contains('active')) {
+            setTimeout(() => {
+                document.addEventListener('click', function closeDropdown(e) {
+                    if (!dropdown.contains(e.target) && !document.getElementById('notificationBell').contains(e.target)) {
+                        dropdown.classList.remove('active');
+                        document.removeEventListener('click', closeDropdown);
+                    }
+                });
+            }, 100);
+        }
+    }
+}
+
+async function markAsRead(notificationId) {
+    if (!currentUser || !supabaseClient) return;
+
+    try {
+        const { error } = await supabaseClient
+            .from('user_notifications')
+            .update({ is_read: true })
+            .eq('id', notificationId)
+            .eq('user_id', currentUser.id);
+
+        if (error) throw error;
+
+        // Update local notifications if they exist
+        if (typeof userNotifications !== 'undefined') {
+            userNotifications = userNotifications.map(n => 
+                n.id === notificationId ? { ...n, is_read: true } : n
+            );
+            
+            if (typeof updateNotificationUI === 'function') {
+                updateNotificationUI();
+            }
+        }
+    } catch (error) {
+        console.error('Error marking notification as read:', error);
+    }
+}
+
+async function markAllAsRead() {
+    if (!currentUser || !supabaseClient) return;
+
+    try {
+        const { error } = await supabaseClient
+            .from('user_notifications')
+            .update({ is_read: true })
+            .eq('user_id', currentUser.id)
+            .eq('is_read', false);
+
+        if (error) throw error;
+
+        // Update local notifications if they exist
+        if (typeof userNotifications !== 'undefined') {
+            userNotifications = userNotifications.map(n => ({ ...n, is_read: true }));
+            
+            if (typeof updateNotificationUI === 'function') {
+                updateNotificationUI();
+            }
+        }
+
+        showNotification('All notifications marked as read', 'success');
+    } catch (error) {
+        console.error('Error marking all notifications as read:', error);
+    }
+}ed notifications
+function showStyledNotification(title, message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = 'styled-notification-modal';
+
+    const icons = {
+        success: '🎉',
+        error: '❌',
+        warning: '⚠️',
+        info: 'ℹ️'
+    };
+
+    notification.innerHTML = `
+        <div class="styled-notification-overlay">
+            <div class="styled-notification-content ${type}">
+                <div class="styled-notification-header">
+                    <span class="styled-notification-icon">${icons[type]}</span>
+                    <h3 class="styled-notification-title">${title}</h3>
+                </div>
+                <p class="styled-notification-message">${message}</p>
+                <button class="styled-notification-close" onclick="this.closest('.styled-notification-modal').remove()">
+                    Got it!
+                </button>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(notification);
+    setTimeout(() => notification.classList.add('show'), 100);
+
+    // Auto remove after 8 seconds
+    setTimeout(() => {
+        if (notification.parentElement) {
+            notification.classList.remove('show');
+            setTimeout(() => notification.remove(), 300);
+        }
+    }, 8000);
+}
+
 function showStyledEmailConfirmationNotification(email, name) {
     const notification = document.createElement('div');
     notification.className = 'email-confirmation-notification';
