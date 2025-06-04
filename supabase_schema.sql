@@ -219,6 +219,44 @@ CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
+-- User session tracking table
+CREATE TABLE user_sessions (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+    session_start TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    session_end TIMESTAMP WITH TIME ZONE,
+    actions_completed JSONB DEFAULT '{}',
+    time_spent_minutes INTEGER DEFAULT 0,
+    ip_address TEXT,
+    user_agent TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- User achievements table
+CREATE TABLE user_achievements (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+    achievement_type TEXT NOT NULL,
+    achievement_name TEXT NOT NULL,
+    description TEXT,
+    earned_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    points_awarded INTEGER DEFAULT 0,
+    badge_icon TEXT
+);
+
+-- RLS policies for new tables
+ALTER TABLE user_sessions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_achievements ENABLE ROW LEVEL SECURITY;
+
+-- Policies for user_sessions
+CREATE POLICY "Users can view own sessions" ON user_sessions FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can update own sessions" ON user_sessions FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "Users can insert own sessions" ON user_sessions FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+-- Policies for user_achievements
+CREATE POLICY "Users can view own achievements" ON user_achievements FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can insert own achievements" ON user_achievements FOR INSERT WITH CHECK (auth.uid() = user_id);
+
 -- Indexes for better performance
 CREATE INDEX idx_profiles_email ON profiles(email);
 CREATE INDEX idx_user_progress_user_id ON user_progress(user_id);
@@ -229,3 +267,5 @@ CREATE INDEX idx_video_progress_user_video ON video_progress(user_id, video_name
 CREATE INDEX idx_admin_notifications_recipient ON admin_notifications(recipient_type, recipient_email);
 CREATE INDEX idx_user_notifications_user_read ON user_notifications(user_id, is_read);
 CREATE INDEX idx_admin_secrets_active ON admin_secrets(is_active);
+CREATE INDEX idx_user_sessions_user_date ON user_sessions(user_id, session_start);
+CREATE INDEX idx_user_achievements_user_type ON user_achievements(user_id, achievement_type);

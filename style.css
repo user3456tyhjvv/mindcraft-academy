@@ -209,6 +209,403 @@ html {
     font-style: italic;
 }
 
+/* Styled Notification Modal */
+.styled-notification-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.styled-notification-modal.show {
+    opacity: 1;
+}
+
+.styled-notification-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.styled-notification-content {
+    background: #faf7f2;
+    border-radius: 20px;
+    padding: 40px;
+    max-width: 450px;
+    width: 90%;
+    text-align: center;
+    border: 3px solid #d4af37;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    transform: scale(0.8);
+    transition: transform 0.3s ease;
+}
+
+.styled-notification-modal.show .styled-notification-content {
+    transform: scale(1);
+}
+
+.styled-notification-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.styled-notification-icon {
+    font-size: 2.5rem;
+}
+
+.styled-notification-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.8rem;
+    color: #2c1810;
+    margin: 0;
+}
+
+.styled-notification-message {
+    color: #5d4e37;
+    font-size: 1.1rem;
+    line-height: 1.6;
+    margin-bottom: 30px;
+}
+
+.styled-notification-close {
+    background: linear-gradient(45deg, #d4af37, #8b4513);
+    color: white;
+    border: none;
+    padding: 14px 30px;
+    border-radius: 50px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.styled-notification-close:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(212, 175, 55, 0.4);
+}
+
+.styled-notification-content.success {
+    border-color: #10b981;
+}
+
+.styled-notification-content.error {
+    border-color: #ef4444;
+}
+
+.styled-notification-content.warning {
+    border-color: #f59e0b;
+}
+
+.styled-notification-content.info {
+    border-color: #3b82f6;
+}
+
+/* Enhanced Email Confirmation */
+.email-confirmation-notification {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.email-confirmation-notification.show {
+    opacity: 1;
+}
+
+.email-confirmation-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.email-confirmation-content {
+    background: #faf7f2;
+    border-radius: 25px;
+    padding: 50px 40px;
+    max-width: 600px;
+    width: 100%;
+    text-align: center;
+    border: 4px solid #d4af37;
+    box-shadow: 0 25px 80px rgba(0, 0, 0, 0.4);
+    position: relative;
+    overflow: hidden;
+}
+
+.email-confirmation-content::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: repeating-linear-gradient(45deg,
+        transparent,
+        transparent 2px,
+        rgba(212, 175, 55, 0.1) 2px,
+        rgba(212, 175, 55, 0.1) 4px);
+    animation: shimmer 15s linear infinite;
+    pointer-events: none;
+}
+
+.confirmation-animation {
+    margin-bottom: 30px;
+    position: relative;
+    z-index: 2;
+}
+
+.success-checkmark {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: block;
+    stroke-width: 2;
+    stroke: #4ade80;
+    stroke-miterlimit: 10;
+    margin: 0 auto 20px;
+    box-shadow: inset 0px 0px 0px #4ade80;
+    animation: fill 0.4s ease-in-out 0.4s forwards, scale 0.3s ease-in-out 0.9s both;
+    position: relative;
+}
+
+.success-checkmark .check-icon {
+    width: 56px;
+    height: 56px;
+    position: absolute;
+    left: 12px;
+    top: 12px;
+    border-radius: 50%;
+    background: #4ade80;
+}
+
+.success-checkmark .icon-line {
+    height: 3px;
+    background-color: #fff;
+    display: block;
+    border-radius: 2px;
+    position: absolute;
+    z-index: 10;
+}
+
+.success-checkmark .icon-line.line-tip {
+    top: 26px;
+    left: 14px;
+    width: 25px;
+    transform: rotate(45deg);
+    animation: icon-line-tip 0.75s;
+}
+
+.success-checkmark .icon-line.line-long {
+    top: 38px;
+    right: 8px;
+    width: 47px;
+    transform: rotate(-45deg);
+    animation: icon-line-long 0.75s;
+}
+
+.confirmation-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.2rem;
+    color: #2c1810;
+    margin-bottom: 30px;
+    position: relative;
+    z-index: 2;
+}
+
+.confirmation-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+    margin: 25px 0;
+    text-align: left;
+    position: relative;
+    z-index: 2;
+}
+
+.step-number {
+    font-size: 2rem;
+    flex-shrink: 0;
+    background: rgba(212, 175, 55, 0.1);
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #d4af37;
+}
+
+.step-content h4 {
+    color: #2c1810;
+    font-size: 1.3rem;
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+
+.step-content p {
+    color: #5d4e37;
+    line-height: 1.6;
+    margin-bottom: 10px;
+}
+
+.email-highlight {
+    background: rgba(212, 175, 55, 0.2);
+    padding: 10px 15px;
+    border-radius: 10px;
+    font-weight: 600;
+    color: #2c1810;
+    border: 1px solid #d4af37;
+    font-family: monospace;
+    font-size: 1.1rem;
+}
+
+.confirmation-actions {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin: 40px 0 20px;
+    flex-wrap: wrap;
+    position: relative;
+    z-index: 2;
+}
+
+.primary-action-btn {
+    background: linear-gradient(45deg, #d4af37, #8b4513);
+    color: white;
+    border: none;
+    padding: 16px 30px;
+    border-radius: 50px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.primary-action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(212, 175, 55, 0.4);
+}
+
+.secondary-action-btn {
+    background: #e8dcc6;
+    color: #2c1810;
+    border: 2px solid #d4af37;
+    padding: 14px 25px;
+    border-radius: 50px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.secondary-action-btn:hover {
+    background: #d4af37;
+    color: white;
+}
+
+.confirmation-note {
+    color: #8b4513;
+    font-size: 0.9rem;
+    font-style: italic;
+    position: relative;
+    z-index: 2;
+}
+
+@keyframes fill {
+    100% {
+        box-shadow: inset 0px 0px 0px 30px #4ade80;
+    }
+}
+
+@keyframes scale {
+    0%, 100% {
+        transform: none;
+    }
+    50% {
+        transform: scale3d(1.1, 1.1, 1);
+    }
+}
+
+@keyframes icon-line-tip {
+    0% {
+        width: 0;
+        left: 1px;
+        top: 19px;
+    }
+    54% {
+        width: 0;
+        left: 1px;
+        top: 19px;
+    }
+    70% {
+        width: 50px;
+        left: -8px;
+        top: 37px;
+    }
+    84% {
+        width: 17px;
+        left: 21px;
+        top: 48px;
+    }
+    100% {
+        width: 25px;
+        left: 14px;
+        top: 45px;
+    }
+}
+
+@keyframes icon-line-long {
+    0% {
+        width: 0;
+        right: 46px;
+        top: 54px;
+    }
+    65% {
+        width: 0;
+        right: 46px;
+        top: 54px;
+    }
+    84% {
+        width: 55px;
+        right: 0px;
+        top: 35px;
+    }
+    100% {
+        width: 47px;
+        right: 8px;
+        top: 38px;
+    }
+}
+
 /* Mobile responsive notifications */
 @media (max-width: 768px) {
     .notification {
@@ -230,6 +627,21 @@ html {
 
     .notification-message {
         font-size: 0.9rem;
+    }
+
+    .confirmation-step {
+        flex-direction: column;
+        text-align: center;
+        gap: 15px;
+    }
+
+    .confirmation-actions {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .primary-action-btn, .secondary-action-btn {
+        min-width: 200px;
     }
 }
 

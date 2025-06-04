@@ -1035,27 +1035,49 @@ async function handleAuthSubmit(event) {
                     data: {
                         name: name
                     },
-                    emailRedirectTo: `${window.location.origin}/email-confirmed.html`
+                    emailRedirectTo: `${window.location.origin}/`
                 }
             });
 
             if (error) {
-                showNotification(`❌ Signup failed: ${error.message}`, 'error');
+                showStyledNotification('❌ Signup Failed', `Registration failed: ${error.message}`, 'error');
                 return;
             }
 
             if (data.user && !data.user.identities?.length) {
                 // User already exists
-                showNotification('❌ An account with this email already exists. Please try logging in instead.', 'error');
+                showStyledNotification('⚠️ Account Exists', 'An account with this email already exists. Please try logging in instead.', 'warning');
                 return;
             }
 
             if (data.user) {
                 closeAuthModal();
-                showEmailConfirmationNotification(email);
-                showNotification('✅ Account created successfully! Please check your email to confirm your account.', 'success');
+                
+                // Show beautiful email confirmation notification
+                showStyledEmailConfirmationNotification(email, name);
+                
+                // Also show a quick success notification
+                showStyledNotification('🎉 Account Created!', 'Please check your email to confirm your account and start your journey.', 'success');
+                
+                // Track signup in Supabase notifications table
+                try {
+                    const { error: notifError } = await supabaseClient
+                        .from('user_notifications')
+                        .insert([{
+                            user_id: data.user.id,
+                            message: `🎉 Welcome to MindCraft Academy! Please confirm your email to unlock all features.`,
+                            type: 'info',
+                            is_read: false,
+                            created_at: new Date().toISOString()
+                        }]);
+                    
+                    if (notifError) console.warn('Failed to create welcome notification:', notifError);
+                } catch (err) {
+                    console.warn('Error creating signup notification:', err);
+                }
+                
             } else {
-                showNotification('❌ Signup failed. Please try again.', 'error');
+                showStyledNotification('❌ Error', 'Signup failed. Please try again.', 'error');
             }
         } else if (formType === 'login') {
             const { data, error } = await supabaseClient.auth.signInWithPassword({
@@ -1107,15 +1129,20 @@ async function handleAuthSubmit(event) {
                     updateUserInterface();
                     closeAuthModal();
 
-                    // Load user notifications and data
-                    await loadUserNotifications();
-                    await addWelcomeNotification();
+                    // Initialize all user systems
+                    await initializeUserSystems();
 
                     const userName = currentUser.user_metadata?.name || currentUser.email?.split('@')[0];
-                    showNotification(`🎉 Welcome back, ${userName}!`, 'success');
+                    showStyledNotification('🎉 Welcome Back!', `Great to see you again, ${userName}! Your progress is ready to continue.`, 'success');
+                    
+                    // Show progress summary
+                    setTimeout(() => {
+                        showProgressSummary();
+                    }, 2000);
+                    
                 } catch (profileError) {
                     console.error('Profile loading error:', profileError);
-                    showNotification('⚠️ Login successful but there was an issue loading your profile. Some features may be limited.', 'warning');
+                    showStyledNotification('⚠️ Login Issue', 'Login successful but there was an issue loading your profile. Some features may be limited.', 'warning');
                 }
             } else {
                 showNotification('❌ Login failed. Please try again.', 'error');
@@ -1157,25 +1184,105 @@ async function handleAuthSubmit(event) {
     }
 }
 
-function showEmailConfirmationNotification(email) {
+// Enhanced styled notifications
+function showStyledNotification(title, message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = 'styled-notification-modal';
+    
+    const icons = {
+        success: '🎉',
+        error: '❌',
+        warning: '⚠️',
+        info: 'ℹ️'
+    };
+    
+    notification.innerHTML = `
+        <div class="styled-notification-overlay">
+            <div class="styled-notification-content ${type}">
+                <div class="styled-notification-header">
+                    <span class="styled-notification-icon">${icons[type]}</span>
+                    <h3 class="styled-notification-title">${title}</h3>
+                </div>
+                <p class="styled-notification-message">${message}</p>
+                <button class="styled-notification-close" onclick="this.closest('.styled-notification-modal').remove()">
+                    Got it!
+                </button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(notification);
+    setTimeout(() => notification.classList.add('show'), 100);
+    
+    // Auto remove after 8 seconds
+    setTimeout(() => {
+        if (notification.parentElement) {
+            notification.classList.remove('show');
+            setTimeout(() => notification.remove(), 300);
+        }
+    }, 8000);
+}
+
+function showStyledEmailConfirmationNotification(email, name) {
     const notification = document.createElement('div');
     notification.className = 'email-confirmation-notification';
     notification.innerHTML = `
-        <div class="email-confirmation-content">
-            <div class="email-confirmation-icon">📧</div>
-            <h3>✅ Account Created Successfully!</h3>
-            <p>We've sent a confirmation link to:</p>
-            <p class="email-address">${email}</p>
-            <p><strong>Important:</strong> Please check your email and click the confirmation link to activate your account before logging in.</p>
-            <div class="email-confirmation-actions">
-                <button onclick="this.parentElement.parentElement.parentElement.remove()" class="email-confirm-btn">Got it!</button>
-                <button onclick="resendConfirmationEmail('${email}')" class="resend-email-btn">Resend Email</button>
+        <div class="email-confirmation-overlay">
+            <div class="email-confirmation-content">
+                <div class="confirmation-animation">
+                    <div class="success-checkmark">
+                        <div class="check-icon">
+                            <span class="icon-line line-tip"></span>
+                            <span class="icon-line line-long"></span>
+                            <div class="icon-circle"></div>
+                            <div class="icon-fix"></div>
+                        </div>
+                    </div>
+                </div>
+                <h2 class="confirmation-title">🎉 Welcome to MindCraft Academy, ${name}!</h2>
+                <div class="confirmation-step">
+                    <span class="step-number">📧</span>
+                    <div class="step-content">
+                        <h4>Check Your Email</h4>
+                        <p>We've sent a confirmation link to:</p>
+                        <div class="email-highlight">${email}</div>
+                    </div>
+                </div>
+                <div class="confirmation-step">
+                    <span class="step-number">✅</span>
+                    <div class="step-content">
+                        <h4>Confirm Your Account</h4>
+                        <p>Click the link in your email to activate your account and unlock all features.</p>
+                    </div>
+                </div>
+                <div class="confirmation-step">
+                    <span class="step-number">🚀</span>
+                    <div class="step-content">
+                        <h4>Start Your Journey</h4>
+                        <p>Once confirmed, you'll have access to premium content, progress tracking, and your personal transformation tools.</p>
+                    </div>
+                </div>
+                <div class="confirmation-actions">
+                    <button onclick="this.closest('.email-confirmation-notification').remove()" class="primary-action-btn">
+                        Got it! I'll check my email
+                    </button>
+                    <button onclick="resendConfirmationEmail('${email}')" class="secondary-action-btn">
+                        Resend Email
+                    </button>
+                </div>
+                <p class="confirmation-note">
+                    <strong>Pro Tip:</strong> Check your spam folder if you don't see the email within a few minutes.
+                </p>
             </div>
         </div>
     `;
 
     document.body.appendChild(notification);
     setTimeout(() => notification.classList.add('show'), 100);
+}
+
+function showEmailConfirmationNotification(email) {
+    showStyledEmailConfirmationNotification(email, email.split('@')[0]);
 }
 
 async function resendConfirmationEmail(email) {
@@ -1346,6 +1453,18 @@ function toggleNotifications() {
     const dropdown = document.getElementById('notificationDropdown');
     if (dropdown) {
         dropdown.classList.toggle('active');
+        
+        // Close dropdown when clicking outside
+        if (dropdown.classList.contains('active')) {
+            setTimeout(() => {
+                document.addEventListener('click', function closeDropdown(e) {
+                    if (!dropdown.contains(e.target) && !document.getElementById('notificationBell').contains(e.target)) {
+                        dropdown.classList.remove('active');
+                        document.removeEventListener('click', closeDropdown);
+                    }
+                });
+            }, 100);
+        }
     }
 }
 
@@ -1394,6 +1513,124 @@ async function markAllAsRead() {
     }
 }
 
+async function initializeUserSystems() {
+    if (!currentUser || !supabaseClient) return;
+
+    try {
+        // Load user notifications and data
+        await loadUserNotifications();
+        await addWelcomeNotification();
+        
+        // Initialize progress tracking
+        await initializeProgressTracking();
+        
+        // Start tracking session
+        await startProgressSession();
+        
+        console.log('User systems initialized successfully');
+        
+    } catch (error) {
+        console.error('Error initializing user systems:', error);
+    }
+}
+
+async function initializeProgressTracking() {
+    if (!currentUser) return;
+
+    try {
+        // Initialize today's progress tracking
+        const today = new Date().toISOString().split('T')[0];
+        
+        const { data: existing, error: checkError } = await supabaseClient
+            .from('daily_progress')
+            .select('*')
+            .eq('user_id', currentUser.id)
+            .eq('date', today)
+            .single();
+
+        if (checkError && checkError.code !== 'PGRST116') {
+            throw checkError;
+        }
+
+        if (!existing) {
+            // Create today's progress entry
+            const { error: insertError } = await supabaseClient
+                .from('daily_progress')
+                .insert([{
+                    user_id: currentUser.id,
+                    date: today,
+                    routine_created: false,
+                    audio_listened: false,
+                    video_watched: false,
+                    exercise_completed: false,
+                    meditation_done: false,
+                    reading_done: false,
+                    updated_at: new Date().toISOString()
+                }]);
+
+            if (insertError) throw insertError;
+        }
+
+        console.log('Progress tracking initialized for today');
+    } catch (error) {
+        console.error('Error initializing progress tracking:', error);
+    }
+}
+
+async function startProgressSession() {
+    if (!currentUser) return;
+
+    try {
+        // Log session start
+        const { error } = await supabaseClient
+            .from('user_notifications')
+            .insert([{
+                user_id: currentUser.id,
+                message: `📊 Progress tracking active! Your actions today will be recorded to help you build unstoppable momentum.`,
+                type: 'info',
+                is_read: false,
+                created_at: new Date().toISOString()
+            }]);
+
+        if (error) throw error;
+
+        // Refresh notifications
+        await loadUserNotifications();
+        
+    } catch (error) {
+        console.error('Error starting progress session:', error);
+    }
+}
+
+async function showProgressSummary() {
+    if (!currentUser) return;
+
+    try {
+        // Get recent progress
+        const { data: recentProgress, error } = await supabaseClient
+            .from('daily_progress')
+            .select('*')
+            .eq('user_id', currentUser.id)
+            .order('date', { ascending: false })
+            .limit(7);
+
+        if (error) throw error;
+
+        const completedDays = recentProgress ? recentProgress.filter(day => 
+            Object.values(day).some(value => typeof value === 'boolean' && value === true)
+        ).length : 0;
+
+        showStyledNotification(
+            '📈 Your Progress Summary', 
+            `You've been active ${completedDays} out of the last 7 days. Keep building that momentum!`, 
+            'info'
+        );
+        
+    } catch (error) {
+        console.error('Error showing progress summary:', error);
+    }
+}
+
 async function addWelcomeNotification() {
     if (!currentUser || !supabaseClient) return;
 
@@ -1416,7 +1653,7 @@ async function addWelcomeNotification() {
         // Create welcome notification
         const welcomeNotification = {
             user_id: currentUser.id,
-            message: `🎉 Welcome to MindCraft Academy! Start your transformation journey today.`,
+            message: `🎉 Welcome to MindCraft Academy! Your transformation journey begins now. Every action you take here builds momentum toward your best self.`,
             type: 'success',
             is_read: false,
             created_at: new Date().toISOString()

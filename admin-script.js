@@ -129,24 +129,64 @@ function showSetupPhase() {
     const secret = generateTOTPSecret();
     document.getElementById('secretKey').textContent = secret;
     
-    // Generate QR code - check if QRCode is available
+    // Generate QR code - ensure QRCode library is loaded
     const qrData = `otpauth://totp/MindCraft%20Academy:Admin?secret=${secret}&issuer=MindCraft%20Academy`;
     
-    if (typeof QRCode !== 'undefined') {
-        QRCode.toCanvas(document.getElementById('qrcode'), qrData, {
-            width: 200,
-            margin: 2
-        }, function(error) {
-            if (error) console.error('QR Code generation error:', error);
-        });
-    } else {
-        console.error('QRCode library not loaded');
-        // Show QR data as text if library fails
-        document.getElementById('qrcode').innerHTML = '<p>QR Code library not loaded. Use manual entry:</p>';
-    }
+    // Clear any existing content
+    const qrContainer = document.getElementById('qrcode');
+    qrContainer.innerHTML = '';
+    
+    // Try to generate QR code with fallback
+    setTimeout(() => {
+        if (typeof QRCode !== 'undefined') {
+            try {
+                QRCode.toCanvas(qrContainer, qrData, {
+                    width: 256,
+                    height: 256,
+                    margin: 4,
+                    color: {
+                        dark: '#2c1810',
+                        light: '#ffffff'
+                    }
+                }, function(error) {
+                    if (error) {
+                        console.error('QR Code generation error:', error);
+                        showQRFallback(qrContainer, qrData, secret);
+                    } else {
+                        console.log('QR Code generated successfully');
+                    }
+                });
+            } catch (error) {
+                console.error('QR Code canvas error:', error);
+                showQRFallback(qrContainer, qrData, secret);
+            }
+        } else {
+            console.warn('QRCode library not available, showing fallback');
+            showQRFallback(qrContainer, qrData, secret);
+        }
+    }, 100);
     
     // Store the secret for verification
     window.tempAdminSecret = secret;
+}
+
+function showQRFallback(container, qrData, secret) {
+    container.innerHTML = `
+        <div style="background: white; padding: 20px; border-radius: 10px; text-align: center; border: 2px solid #d4af37;">
+            <h4 style="color: #2c1810; margin-bottom: 15px;">🔐 Manual Setup Required</h4>
+            <p style="color: #5d4e37; margin-bottom: 15px;">
+                Open your authenticator app and manually add this account:
+            </p>
+            <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0; border: 1px solid #d4af37;">
+                <strong>Account:</strong> MindCraft Academy<br>
+                <strong>Key:</strong> <code style="background: #e8dcc6; padding: 2px 6px; border-radius: 4px; font-family: monospace;">${secret}</code>
+            </div>
+            <p style="color: #8b4513; font-size: 0.9rem;">
+                Or scan this URL in your authenticator app:<br>
+                <small style="word-break: break-all; background: #f0f0f0; padding: 5px; border-radius: 4px; display: inline-block; margin-top: 5px;">${qrData}</small>
+            </p>
+        </div>
+    `;
 }
 
 function showLoginPhase() {
@@ -648,7 +688,36 @@ async function generateAdminAccess() {
         // Show QR code
         document.getElementById('newAdminSecret').textContent = secret;
         const qrData = `otpauth://totp/MindCraft%20Academy:${adminName}?secret=${secret}&issuer=MindCraft%20Academy`;
-        QRCode.toCanvas(document.getElementById('newAdminQRCode'), qrData);
+        
+        const qrContainer = document.getElementById('newAdminQRCode');
+        qrContainer.innerHTML = '';
+        
+        // Generate QR code with fallback
+        setTimeout(() => {
+            if (typeof QRCode !== 'undefined') {
+                try {
+                    QRCode.toCanvas(qrContainer, qrData, {
+                        width: 256,
+                        height: 256,
+                        margin: 4,
+                        color: {
+                            dark: '#2c1810',
+                            light: '#ffffff'
+                        }
+                    }, function(error) {
+                        if (error) {
+                            console.error('New admin QR generation error:', error);
+                            showNewAdminQRFallback(qrContainer, qrData, secret, adminName);
+                        }
+                    });
+                } catch (error) {
+                    console.error('New admin QR canvas error:', error);
+                    showNewAdminQRFallback(qrContainer, qrData, secret, adminName);
+                }
+            } else {
+                showNewAdminQRFallback(qrContainer, qrData, secret, adminName);
+            }
+        }, 100);
         
         document.getElementById('newAdminQR').classList.remove('hidden');
         document.getElementById('adminName').value = '';
@@ -659,6 +728,26 @@ async function generateAdminAccess() {
         console.error('Error generating admin access:', error);
         alert('Error generating admin access');
     }
+}
+
+function showNewAdminQRFallback(container, qrData, secret, adminName) {
+    container.innerHTML = `
+        <div style="background: white; padding: 20px; border-radius: 10px; text-align: center; border: 2px solid #d4af37;">
+            <h4 style="color: #2c1810; margin-bottom: 15px;">🔐 New Admin Setup</h4>
+            <p style="color: #5d4e37; margin-bottom: 15px;">
+                Share these details with ${adminName}:
+            </p>
+            <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0; border: 1px solid #d4af37;">
+                <strong>Account:</strong> MindCraft Academy<br>
+                <strong>User:</strong> ${adminName}<br>
+                <strong>Key:</strong> <code style="background: #e8dcc6; padding: 2px 6px; border-radius: 4px; font-family: monospace;">${secret}</code>
+            </div>
+            <p style="color: #8b4513; font-size: 0.9rem;">
+                Manual setup URL:<br>
+                <small style="word-break: break-all; background: #f0f0f0; padding: 5px; border-radius: 4px; display: inline-block; margin-top: 5px;">${qrData}</small>
+            </p>
+        </div>
+    `;
 }
 
 // Utility Functions
