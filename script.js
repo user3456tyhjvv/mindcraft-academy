@@ -80,7 +80,7 @@ async function handleEmailConfirmation() {
             // Create user profile after email confirmation
             if (data.user) {
                 currentUser = data.user;
-                
+
                 try {
                     await loadOrCreateUserProfile();
                     updateUserInterface();
@@ -97,7 +97,7 @@ async function handleEmailConfirmation() {
                 } catch (profileError) {
                     console.error('Profile creation error after confirmation:', profileError);
                     showNotification('⚠️ Email confirmed but there was an issue setting up your profile. Please try logging in.', 'warning');
-                    
+
                     // Still clean up URL
                     window.history.replaceState({}, document.title, '/');
                 }
@@ -936,9 +936,9 @@ function showAuthModal(type) {
         formTitle.textContent = 'Welcome Back';
         submitButton.textContent = 'Sign In';
         formFooter.innerHTML = `
-            Don't have an account? <a onclick="toggleForm('signup')">Sign up</a><br>
-            <a onclick="showForgotPasswordModal()" style="font-size: 0.9rem; color: #8b4513; margin-top: 10px; display: block;">Forgot your password?</a>
-        `;
+                Don't have an account? <a onclick="toggleForm('signup')">Sign up</a><br>
+                <a onclick="showForgotPasswordModal()" style="font-size: 0.9rem; color: #8b4513; margin-top: 10px; display: block; cursor: pointer; text-decoration: underline;">Forgot your password?</a>
+            `;
         nameGroup.style.display = 'none';
         authForm.dataset.type = 'login';
     } else if (type === 'signup') {
@@ -1034,7 +1034,7 @@ async function handleAuthSubmit(event) {
                 // Check if email is confirmed
                 if (!data.user.email_confirmed_at) {
                     showNotification('⚠️ Please check your email and confirm your account before logging in.', 'warning');
-                    
+
                     // Offer to resend confirmation email
                     const resendConfirm = confirm('Would you like us to resend the confirmation email?');
                     if (resendConfirm) {
@@ -1090,8 +1090,7 @@ async function handleAuthSubmit(event) {
             showNotification('Password reset email sent! Check your inbox.', 'success');
         } else if (formType === 'reset-password') {
             const newPassword = password;
-            const { error }```text
- = await supabaseClient.auth.updateUser({
+            const { error } = await supabaseClient.auth.updateUser({
                 password: newPassword
             });
 
