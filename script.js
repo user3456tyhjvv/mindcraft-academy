@@ -1001,8 +1001,8 @@ async function saveProgressCustomization() {
             }
         });
 
-        // Save custom habits to user profile
-        ```text
+        // Save custom habits to user profile```text
+
         const { error } = await supabaseClient
             .from('profiles')
             .update({
@@ -1630,6 +1630,28 @@ function updateNotificationUI() {
     }
 }
 
+async function loadUserNotifications() {
+    if (!currentUser || !supabaseClient) return;
+
+    try {
+        const { data: notifications, error } = await supabaseClient
+            .from('user_notifications')
+            .select('*')
+            .eq('user_id', currentUser.id)
+            .order('created_at', { ascending: false })
+            .limit(20);
+
+        if (error) throw error;
+
+        userNotifications = notifications || [];
+        updateNotificationUI();
+
+    } catch (error) {
+        console.error('Error loading notifications:', error);
+    }
+}
+
+// Missing notification functions
 function toggleNotifications() {
     const dropdown = document.getElementById('notificationDropdown');
     if (dropdown) {
@@ -1646,6 +1668,46 @@ function toggleNotifications() {
                 });
             }, 100);
         }
+    }
+}
+
+function showEditTimeModal(timeBlock, originalTime) {
+    if (!currentUser) {
+        showNotification('Please log in to edit your routine', 'warning');
+        return;
+    }
+
+    currentEditingBlock = timeBlock;
+    const modal = document.getElementById('editTimeModal');
+    if (modal) {
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+
+        // Pre-fill form with current values
+        const timeRange = originalTime.split(' - ');
+        if (timeRange.length === 2) {
+            document.getElementById('editStartTime').value = convertTo24Hour(timeRange[0]);
+            document.getElementById('editEndTime').value = convertTo24Hour(timeRange[1]);
+        }
+
+        const currentActivity = timeBlock.querySelector('p').textContent;
+        const currentDescription = timeBlock.querySelector('small').textContent;
+
+        document.getElementById('editActivityName').value = currentActivity.replace(/[^\w\s]/gi, '');
+        document.getElementById('editActivityDescription').value = currentDescription;
+    }
+}
+
+function showProgressCustomization() {
+    if (!currentUser) {
+        showNotification('Please log in to customize your progress tracking', 'warning');
+        return;
+    }
+
+    const modal = document.getElementById('progressCustomModal');
+    if (modal) {
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
     }
 }
 
