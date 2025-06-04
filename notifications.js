@@ -2,8 +2,21 @@
 let userNotifications = [];
 let notificationInterval = null;
 
-function toggleNotifications() {
+function toggleNotifications(event) {
+    // Prevent event from bubbling up to parent containers
+    if (event) {
+        event.stopPropagation();
+        event.preventDefault();
+    }
+    
     const dropdown = document.getElementById('notificationDropdown');
+    const profileMenu = document.getElementById('profileMenu');
+    
+    // Close profile menu if it's open
+    if (profileMenu) {
+        profileMenu.classList.remove('active');
+    }
+    
     if (dropdown) {
         dropdown.classList.toggle('active');
         if (dropdown.classList.contains('active')) {

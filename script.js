@@ -1965,10 +1965,23 @@ function subscribeNewsletter(event) {
 document.addEventListener('DOMContentLoaded', function() {
     const profileContainer = document.getElementById('profileContainer');
     const profileMenu = document.getElementById('profileMenu');
+    const notificationBell = document.getElementById('notificationBell');
 
     if (profileContainer) {
         profileContainer.addEventListener('click', function(e) {
+            // Don't open profile menu if clicking on notification bell
+            if (notificationBell && notificationBell.contains(e.target)) {
+                return;
+            }
+            
             e.stopPropagation();
+            
+            // Close notification dropdown if it's open
+            const notificationDropdown = document.getElementById('notificationDropdown');
+            if (notificationDropdown) {
+                notificationDropdown.classList.remove('active');
+            }
+            
             profileMenu.classList.toggle('active');
         });
     }
