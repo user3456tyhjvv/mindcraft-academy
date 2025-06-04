@@ -98,6 +98,7 @@
             width: 45px;
             height: 45px;
             display: flex;
+
             align-items: center;
             justify-content: center;
             cursor: pointer;
@@ -129,9 +130,17 @@
         }
 
         @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-            100% { transform: scale(1); }
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.1);
+            }
+
+            100% {
+                transform: scale(1);
+            }
         }
 
         .notification-dropdown {
@@ -158,6 +167,7 @@
                 opacity: 0;
                 transform: translateY(-10px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -231,7 +241,7 @@
         .profile-container {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 30px;
             background: rgba(255, 255, 255, 0.15);
             padding: 8px 15px;
             border-radius: 50px;
@@ -1076,7 +1086,8 @@
             flex-wrap: wrap;
         }
 
-        .email-confirm-btn, .resend-email-btn {
+        .email-confirm-btn,
+        .resend-email-btn {
             padding: 12px 25px;
             border: none;
             border-radius: 10px;
@@ -1311,7 +1322,8 @@
                     <div class="profile-name" id="profileName">User</div>
                     <div class="profile-menu" id="profileMenu">
                         <div class="profile-menu-item" onclick="showAuthModal('profile')">Edit Profile</div>
-                        <div class="profile-menu-item" onclick="window.open('/totp-setup.html', '_blank')">🔐 Setup 2FA</div>
+                        <div class="profile-menu-item" onclick="window.open('/totp-setup.html', '_blank')">🔐 Setup 2FA
+                        </div>
                         <div class="profile-menu-item" onclick="saveCurrentData()">Save Progress</div>
                         <div class="profile-menu-item" onclick="logout()">Logout</div>
                     </div>
@@ -1425,7 +1437,8 @@
                                     <span class="time-display">0:00 / 45:00</span>
                                 </div>
                             </div>
-                            <button class="download-button" onclick="downloadAudio('productivity')" title="Download">⬇</button>
+                            <button class="download-button" onclick="downloadAudio('productivity')"
+                                title="Download">⬇</button>
                         </div>
                         <p style="opacity: 0.9; line-height: 1.5;">Discover why being busy isn't being productive, and
                             learn the counterintuitive strategies that actually move the needle in your life.</p>
@@ -1448,7 +1461,8 @@
                                     <span class="time-display">0:00 / 38:00</span>
                                 </div>
                             </div>
-                            <button class="download-button" onclick="downloadAudio('anxiety')" title="Download">⬇</button>
+                            <button class="download-button" onclick="downloadAudio('anxiety')"
+                                title="Download">⬇</button>
                         </div>
                         <p style="opacity: 0.9; line-height: 1.5;">Transform anxious energy into focused power. Real
                             techniques from cognitive behavioral therapy made practical for daily life.</p>
@@ -1471,7 +1485,8 @@
                                     <span class="time-display">0:00 / 52:00</span>
                                 </div>
                             </div>
-                            <button class="download-button" onclick="downloadAudio('habits')" title="Download">⬇</button>
+                            <button class="download-button" onclick="downloadAudio('habits')"
+                                title="Download">⬇</button>
                         </div>
                         <p style="opacity: 0.9; line-height: 1.5;">Why willpower fails and systems succeed. Build habits
                             so strong they become automatic, freeing your mind for higher pursuits.</p>
@@ -1494,7 +1509,8 @@
                                     <span class="time-display">0:00 / 41:00</span>
                                 </div>
                             </div>
-                            <button class="download-button" onclick="downloadAudio('confidence')" title="Download">⬇</button>
+                            <button class="download-button" onclick="downloadAudio('confidence')"
+                                title="Download">⬇</button>
                         </div>
                         <p style="opacity: 0.9; line-height: 1.5;">Move beyond fake-it-till-you-make-it to genuine
                             self-assurance. Confidence that comes from competence and character.</p>
@@ -1583,44 +1599,55 @@
 
                 <!-- Premium Videos Section -->
                 <div id="premiumVideos" style="display: none;">
-                    <h3 style="text-align: center; margin: 40px 0 20px; color: #2c1810; font-family: 'Playfair Display', serif;">🌟 Premium Masterclasses</h3>
+                    <h3
+                        style="text-align: center; margin: 40px 0 20px; color: #2c1810; font-family: 'Playfair Display', serif;">
+                        🌟 Premium Masterclasses</h3>
                     <div class="video-gallery">
                         <div class="video-card">
                             <div class="video-thumbnail" onclick="playPremiumVideo('advanced-productivity')">
-                                <video class="video-element" width="100%" height="200" controls style="border-radius: 10px;">
-                                    <source src="https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4" type="video/mp4">
+                                <video class="video-element" width="100%" height="200" controls
+                                    style="border-radius: 10px;">
+                                    <source src="https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4"
+                                        type="video/mp4">
                                     Your browser does not support the video tag.
                                 </video>
                             </div>
                             <div class="video-info">
                                 <h4 class="video-title">Advanced Productivity Systems</h4>
-                                <p class="video-description">Master the systems used by Fortune 500 CEOs to manage time and priorities effectively.</p>
+                                <p class="video-description">Master the systems used by Fortune 500 CEOs to manage time
+                                    and priorities effectively.</p>
                             </div>
                         </div>
 
                         <div class="video-card">
                             <div class="video-thumbnail" onclick="playPremiumVideo('elite-mindset')">
-                                <video class="video-element" width="100%" height="200" controls style="border-radius: 10px;">
-                                    <source src="https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4" type="video/mp4">
+                                <video class="video-element" width="100%" height="200" controls
+                                    style="border-radius: 10px;">
+                                    <source src="https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4"
+                                        type="video/mp4">
                                     Your browser does not support the video tag.
                                 </video>
                             </div>
                             <div class="video-info">
                                 <h4 class="video-title">Elite Performance Mindset</h4>
-                                <p class="video-description">Develop the mental frameworks used by Olympic athletes and high performers.</p>
+                                <p class="video-description">Develop the mental frameworks used by Olympic athletes and
+                                    high performers.</p>
                             </div>
                         </div>
 
                         <div class="video-card">
                             <div class="video-thumbnail" onclick="playPremiumVideo('wealth-building')">
-                                <video class="video-element" width="100%" height="200" controls style="border-radius: 10px;">
-                                    <source src="https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4" type="video/mp4">
+                                <video class="video-element" width="100%" height="200" controls
+                                    style="border-radius: 10px;">
+                                    <source src="https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4"
+                                        type="video/mp4">
                                     Your browser does not support the video tag.
                                 </video>
                             </div>
                             <div class="video-info">
                                 <h4 class="video-title">Wealth Building Foundations</h4>
-                                <p class="video-description">Financial principles every young person needs to know to build generational wealth.</p>
+                                <p class="video-description">Financial principles every young person needs to know to
+                                    build generational wealth.</p>
                             </div>
                         </div>
                     </div>
@@ -1646,77 +1673,99 @@
                             <h4>5:30 - 6:00 AM</h4>
                             <p>🌅 Wake Up & Hydrate</p>
                             <small>Start with gratitude</small>
-                            <button class="edit-time-btn" onclick="event.stopPropagation(); showEditTimeModal(this.parentElement, '5:30 AM - 6:00 AM')">✏️ Edit</button>
+                            <button class="edit-time-btn"
+                                onclick="event.stopPropagation(); showEditTimeModal(this.parentElement, '5:30 AM - 6:00 AM')">✏️
+                                Edit</button>
                         </div>
 
                         <div class="time-block" onclick="selectBlock(this, '6:00 AM')">
                             <h4>6:00 - 6:30 AM</h4>
                             <p>🏃‍♂️ Movement & Energy</p>
                             <small>Exercise or stretch</small>
-                            <button class="edit-time-btn" onclick="event.stopPropagation(); showEditTimeModal(this.parentElement, '6:00 AM - 6:30 AM')">✏️ Edit</button>
+                            <button class="edit-time-btn"
+                                onclick="event.stopPropagation(); showEditTimeModal(this.parentElement, '6:00 AM - 6:30 AM')">✏️
+                                Edit</button>
                         </div>
 
                         <div class="time-block" onclick="selectBlock(this, '6:30 AM')">
                             <h4>6:30 - 7:00 AM</h4>
                             <p>🧘‍♀️ Mind Training</p>
                             <small>Meditation or journaling</small>
-                            <button class="edit-time-btn" onclick="event.stopPropagation(); showEditTimeModal(this.parentElement, '6:30 AM - 7:00 AM')">✏️ Edit</button>
+                            <button class="edit-time-btn"
+                                onclick="event.stopPropagation(); showEditTimeModal(this.parentElement, '6:30 AM - 7:00 AM')">✏️
+                                Edit</button>
                         </div>
 
                         <div class="time-block" onclick="selectBlock(this, '7:00 AM')">
                             <h4>7:00 - 8:00 AM</h4>
                             <p>📚 Learning Hour</p>
                             <small>Read or listen to audiobook</small>
-                            <button class="edit-time-btn" onclick="event.stopPropagation(); showEditTimeModal(this.parentElement, '7:00 AM - 8:00 AM')">✏️ Edit</button>
+                            <button class="edit-time-btn"
+                                onclick="event.stopPropagation(); showEditTimeModal(this.parentElement, '7:00 AM - 8:00 AM')">✏️
+                                Edit</button>
                         </div>
 
                         <div class="time-block" onclick="selectBlock(this, '8:00 AM')">
                             <h4>8:00 - 12:00 PM</h4>
                             <p>🎯 Deep Work Block</p>
                             <small>Most important tasks</small>
-                            <button class="edit-time-btn" onclick="event.stopPropagation(); showEditTimeModal(this.parentElement, '8:00 AM - 12:00 PM')">✏️ Edit</button>
+                            <button class="edit-time-btn"
+                                onclick="event.stopPropagation(); showEditTimeModal(this.parentElement, '8:00 AM - 12:00 PM')">✏️
+                                Edit</button>
                         </div>
 
                         <div class="time-block" onclick="selectBlock(this, '12:00 PM')">
                             <h4>12:00 - 1:00 PM</h4>
                             <p>🍽️ Mindful Break</p>
                             <small>Lunch & recharge</small>
-                            <button class="edit-time-btn" onclick="event.stopPropagation(); showEditTimeModal(this.parentElement, '12:00 PM - 1:00 PM')">✏️ Edit</button>
+                            <button class="edit-time-btn"
+                                onclick="event.stopPropagation(); showEditTimeModal(this.parentElement, '12:00 PM - 1:00 PM')">✏️
+                                Edit</button>
                         </div>
 
                         <div class="time-block" onclick="selectBlock(this, '1:00 PM')">
                             <h4>1:00 - 5:00 PM</h4>
                             <p>💼 Focused Work</p>
                             <small>Collaboration & tasks</small>
-                            <button class="edit-time-btn" onclick="event.stopPropagation(); showEditTimeModal(this.parentElement, '1:00 PM - 5:00 PM')">✏️ Edit</button>
+                            <button class="edit-time-btn"
+                                onclick="event.stopPropagation(); showEditTimeModal(this.parentElement, '1:00 PM - 5:00 PM')">✏️
+                                Edit</button>
                         </div>
 
                         <div class="time-block" onclick="selectBlock(this, '5:00 PM')">
                             <h4>5:00 - 6:00 PM</h4>
                             <p>🔄 Transition Time</p>
                             <small>Exercise or decompress</small>
-                            <button class="edit-time-btn" onclick="event.stopPropagation(); showEditTimeModal(this.parentElement, '5:00 PM - 6:00 PM')">✏️ Edit</button>
+                            <button class="edit-time-btn"
+                                onclick="event.stopPropagation(); showEditTimeModal(this.parentElement, '5:00 PM - 6:00 PM')">✏️
+                                Edit</button>
                         </div>
 
                         <div class="time-block" onclick="selectBlock(this, '6:00 PM')">
                             <h4>6:00 - 8:00 PM</h4>
                             <p>👥 Connection Time</p>
                             <small>Family, friends, hobbies</small>
-                            <button class="edit-time-btn" onclick="event.stopPropagation(); showEditTimeModal(this.parentElement, '6:00 PM - 8:00 PM')">✏️ Edit</button>
+                            <button class="edit-time-btn"
+                                onclick="event.stopPropagation(); showEditTimeModal(this.parentElement, '6:00 PM - 8:00 PM')">✏️
+                                Edit</button>
                         </div>
 
                         <div class="time-block" onclick="selectBlock(this, '8:00 PM')">
                             <h4>8:00 - 9:00 PM</h4>
                             <p>📝 Reflection</p>
                             <small>Plan tomorrow, gratitude</small>
-                            <button class="edit-time-btn" onclick="event.stopPropagation(); showEditTimeModal(this.parentElement, '8:00 PM - 9:00 PM')">✏️ Edit</button>
+                            <button class="edit-time-btn"
+                                onclick="event.stopPropagation(); showEditTimeModal(this.parentElement, '8:00 PM - 9:00 PM')">✏️
+                                Edit</button>
                         </div>
 
                         <div class="time-block" onclick="selectBlock(this, '9:00 PM')">
                             <h4>9:00 - 10:00 PM</h4>
                             <p>😴 Wind Down</p>
                             <small>Prepare for quality sleep</small>
-                            <button class="edit-time-btn" onclick="event.stopPropagation(); showEditTimeModal(this.parentElement, '9:00 PM - 10:00 PM')">✏️ Edit</button>
+                            <button class="edit-time-btn"
+                                onclick="event.stopPropagation(); showEditTimeModal(this.parentElement, '9:00 PM - 10:00 PM')">✏️
+                                Edit</button>
                         </div>
                     </div>
 
@@ -1726,7 +1775,8 @@
                             results</p>
                         <button class="cta-button" onclick="saveRoutine()">Lock In My Routine</button>
                         <div id="editRoutineSection" style="display: none; margin-top: 20px;">
-                            <button class="cta-button" onclick="enableTimeEditing()" style="background: linear-gradient(45deg, #8b4513, #d4af37);">
+                            <button class="cta-button" onclick="enableTimeEditing()"
+                                style="background: linear-gradient(45deg, #8b4513, #d4af37);">
                                 ✏️ Edit Time Blocks
                             </button>
                         </div>
@@ -1884,7 +1934,8 @@
                         transformation</p>
                     <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
                         <button class="cta-button" onclick="updateProgress()">Update Today's Progress</button>
-                        <button class="cta-button" onclick="showProgressCustomization()" style="background: linear-gradient(45deg, #8b4513, #d4af37);">
+                        <button class="cta-button" onclick="showProgressCustomization()"
+                            style="background: linear-gradient(45deg, #8b4513, #d4af37);">
                             🎯 Customize Tracking
                         </button>
                     </div>
@@ -2044,7 +2095,8 @@
             </div>
 
             <div style="margin-bottom: 20px;">
-                <label style="display: block; margin-bottom: 10px; color: #5d4e37; font-weight: 500;">Payment Method</label>
+                <label style="display: block; margin-bottom: 10px; color: #5d4e37; font-weight: 500;">Payment
+                    Method</label>
                 <select id="paymentMethod" class="form-input" style="margin-bottom: 15px;">
                     <option value="card">Credit/Debit Card</option>
                     <option value="paypal">PayPal</option>
@@ -2103,7 +2155,8 @@
             </div>
             <div class="form-group">
                 <label for="editActivityName">Activity</label>
-                <input type="text" id="editActivityName" class="form-input" placeholder="e.g., Morning Workout" required>
+                <input type="text" id="editActivityName" class="form-input" placeholder="e.g., Morning Workout"
+                    required>
             </div>
             <div class="form-group">
                 <label for="editActivityDescription">Description</label>
@@ -2118,34 +2171,40 @@
         <div class="auth-form" style="max-width: 600px;">
             <button class="close-modal" onclick="closeProgressCustomModal()">&times;</button>
             <h2 class="form-title">🎯 Customize Your Progress Tracking</h2>
-            <p style="color: #5d4e37; margin-bottom: 25px; text-align: center;">Add your personal goals and habits to track</p>
+            <p style="color: #5d4e37; margin-bottom: 25px; text-align: center;">Add your personal goals and habits to
+                track</p>
 
             <div style="background: #f9f6f0; padding: 20px; border-radius: 10px; margin-bottom: 25px;">
                 <h4 style="color: #2c1810; margin-bottom: 15px;">💡 Recommended Categories:</h4>
 
                 <div class="form-group">
                     <label>🧘 Mindfulness & Mental Health</label>
-                    <input type="text" class="form-input custom-habit-input" data-category="mindfulness" placeholder="e.g., 10 minutes meditation, journaling">
+                    <input type="text" class="form-input custom-habit-input" data-category="mindfulness"
+                        placeholder="e.g., 10 minutes meditation, journaling">
                 </div>
 
                 <div class="form-group">
                     <label>💪 Physical Health</label>
-                    <input type="text" class="form-input custom-habit-input" data-category="health" placeholder="e.g., 8 glasses of water, 30-min exercise">
+                    <input type="text" class="form-input custom-habit-input" data-category="health"
+                        placeholder="e.g., 8 glasses of water, 30-min exercise">
                 </div>
 
                 <div class="form-group">
                     <label>🎯 Productivity & Skills</label>
-                    <input type="text" class="form-input custom-habit-input" data-category="productivity" placeholder="e.g., Learn new skill, complete priorities">
+                    <input type="text" class="form-input custom-habit-input" data-category="productivity"
+                        placeholder="e.g., Learn new skill, complete priorities">
                 </div>
 
                 <div class="form-group">
                     <label>👥 Relationships & Social</label>
-                    <input type="text" class="form-input custom-habit-input" data-category="social" placeholder="e.g., Call family, help someone">
+                    <input type="text" class="form-input custom-habit-input" data-category="social"
+                        placeholder="e.g., Call family, help someone">
                 </div>
 
                 <div class="form-group">
                     <label>🌱 Personal Growth</label>
-                    <input type="text" class="form-input custom-habit-input" data-category="growth" placeholder="e.g., Practice gratitude, learn something new">
+                    <input type="text" class="form-input custom-habit-input" data-category="growth"
+                        placeholder="e.g., Practice gratitude, learn something new">
                 </div>
             </div>
 
@@ -2355,7 +2414,7 @@
 
                 if (supabaseClient && currentUser) {
                     // Update user subscription in Supabase
-                    const { error } = await supabaseClient
+                    const {error} = await supabaseClient
                         .from('profiles')
                         .update({
                             subscription_status: 'premium',
