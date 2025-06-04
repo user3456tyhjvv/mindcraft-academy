@@ -247,7 +247,6 @@ async function loadUserRoutine() {
 async function checkUserSession() {
     if (!supabaseClient || !supabaseClient.auth) {
         console.warn('Supabase not properly initialized');
-        showNotification('Database connection not available', 'warning');
         return;
     }
 
@@ -261,23 +260,31 @@ async function checkUserSession() {
 
         if (session) {
             currentUser = session.user;
-            await initializeUserTables();
-            updateUserInterface();
+            console.log('User session found:', currentUser.id);
+            
+            try {
+                // Initialize user data with better error handling
+                await initializeUserTables();
+                updateUserInterface();
 
-            // Load and show notifications
-            await loadUserNotifications();
+                // Load notifications without blocking
+                loadUserNotifications().catch(err => console.warn('Failed to load notifications:', err));
+                addWelcomeNotification().catch(err => console.warn('Failed to add welcome notification:', err));
 
-            // Show welcome notification
-            await addWelcomeNotification();
+                const userName = currentUser.user_metadata?.name || currentUser.email?.split('@')[0] || 'User';
+                showNotification(`Welcome back, ${userName}!`, 'success');
 
-            showNotification(`Welcome back, ${currentUser.email}!`, 'success');
-
-            // Check subscription status
-            await checkSubscriptionStatus();
+                // Check subscription status
+                checkSubscriptionStatus().catch(err => console.warn('Failed to check subscription:', err));
+            } catch (error) {
+                console.error('Error initializing user data:', error);
+                // Still update UI even if some initialization fails
+                updateUserInterface();
+                showNotification('Logged in with limited functionality', 'warning');
+            }
         }
     } catch (error) {
         console.error('Error checking session:', error);
-        showNotification('Session check failed', 'warning');
     }
 }
 
@@ -1222,78 +1229,76 @@ async function loadOrCreateUserProfile() {
     try {
         console.log('Loading profile for user:', currentUser.id);
         
-        // First, try to get existing profile
-        const { data: existingProfile, error: selectError } = await supabaseClient
-            .from('profiles')
-            .select('*')
-            .eq('id', currentUser.id)
-            .maybeSingle();
+        // First, try to get existing profile with retries
+        for (let attempt = 0; attempt < 3; attempt++) {
+            const { data: existingProfile, error: selectError } = await supabaseClient
+                .from('profiles')
+                .select('*')
+                .eq('id', currentUser.id)
+                .maybeSingle();
 
-        if (selectError && selectError.code !== 'PGRST116') {
-            console.error('Error fetching profile:', selectError);
-            throw selectError;
-        }
-
-        if (existingProfile) {
-            console.log('Profile found:', existingProfile);
-            return existingProfile;
-        }
-
-        // Profile doesn't exist, create it
-        console.log('No profile found, creating new profile...');
-        
-        const profileData = {
-            id: currentUser.id,
-            email: currentUser.email,
-            name: currentUser.user_metadata?.name || currentUser.email?.split('@')[0] || 'User',
-            created_at: new Date().toISOString(),
-            subscription_status: 'free',
-            join_date: new Date().toISOString(),
-            totp_enabled: false,
-            updated_at: new Date().toISOString()
-        };
-
-        console.log('Creating profile with data:', profileData);
-
-        const { data: newProfile, error: createError } = await supabaseClient
-            .from('profiles')
-            .insert([profileData])
-            .select()
-            .single();
-
-        if (createError) {
-            console.error('Profile creation error:', createError);
-            
-            // If profile already exists due to trigger, try to fetch it again
-            if (createError.code === '23505') {
-                console.log('Profile might have been created by trigger, attempting to fetch...');
-                await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
-                
-                const { data: retryProfile, error: retryError } = await supabaseClient
-                    .from('profiles')
-                    .select('*')
-                    .eq('id', currentUser.id)
-                    .single();
-
-                if (retryError) {
-                    throw new Error(`Failed to fetch profile after creation: ${retryError.message}`);
-                }
-
-                console.log('Profile fetched after retry:', retryProfile);
-                return retryProfile;
+            if (selectError && selectError.code !== 'PGRST116') {
+                console.error('Error fetching profile:', selectError);
+                if (attempt === 2) throw selectError;
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                continue;
             }
+
+            if (existingProfile) {
+                console.log('Profile found:', existingProfile);
+                return existingProfile;
+            }
+
+            // Profile doesn't exist, try to create it
+            console.log('No profile found, creating new profile...');
             
-            throw new Error(`Failed to create profile: ${createError.message}`);
+            const profileData = {
+                id: currentUser.id,
+                email: currentUser.email,
+                name: currentUser.user_metadata?.name || currentUser.email?.split('@')[0] || 'User',
+                subscription_status: 'free',
+                totp_enabled: false
+            };
+
+            console.log('Creating profile with data:', profileData);
+
+            const { data: newProfile, error: createError } = await supabaseClient
+                .from('profiles')
+                .upsert([profileData], { 
+                    onConflict: 'id',
+                    ignoreDuplicates: false 
+                })
+                .select()
+                .single();
+
+            if (createError) {
+                console.error('Profile creation error:', createError);
+                if (attempt === 2) {
+                    throw new Error(`Failed to create profile: ${createError.message}`);
+                }
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                continue;
+            }
+
+            console.log('Profile created/updated successfully:', newProfile);
+            return newProfile;
         }
 
-        console.log('New profile created successfully:', newProfile);
-        showNotification('Profile created successfully!', 'success');
-        return newProfile;
+        throw new Error('Failed to load or create profile after 3 attempts');
 
     } catch (error) {
         console.error('Error in loadOrCreateUserProfile:', error);
-        showNotification('Failed to load or create profile: ' + error.message, 'error');
-        throw error;
+        
+        // Don't show error notification for profile issues, just log
+        console.warn('Profile creation failed, continuing with limited functionality');
+        
+        // Return a basic profile object to prevent further errors
+        return {
+            id: currentUser.id,
+            email: currentUser.email,
+            name: currentUser.user_metadata?.name || currentUser.email?.split('@')[0] || 'User',
+            subscription_status: 'free'
+        };
     }
 }
 
