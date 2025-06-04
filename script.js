@@ -162,34 +162,16 @@ function showPasswordResetModal() {
 
 // Supabase Database Setup Functions
 async function initializeUserTables() {
-    if (!supabaseClient) return;
+    if (!supabaseClient || !currentUser) {
+        console.error('Supabase client or current user not available');
+        return;
+    }
 
     try {
-        // Create user profile if doesn't exist
-        const { data: profiles, error: profileError } = await supabaseClient
-            .from('profiles')
-            .select('*')
-            .eq('id', currentUser.id);
-
-        if (profileError) {
-            throw profileError;
-        }
-
-        if (!profiles || profiles.length === 0) {
-            // Profile doesn't exist, create it
-            const { error: createError } = await supabaseClient
-                .from('profiles')
-                .insert([{
-                    id: currentUser.id,
-                    email: currentUser.email,
-                    name: currentUser.user_metadata?.name || currentUser.email.split('@')[0],
-                    created_at: new Date().toISOString(),
-                    subscription_status: 'free',
-                    join_date: new Date().toISOString()
-                }]);
-
-            if (createError) throw createError;
-        }
+        console.log('Initializing user tables for:', currentUser.id);
+        
+        // Ensure profile exists (this will create it if needed)
+        await loadOrCreateUserProfile();
 
         // Initialize progress tracking
         await initializeUserProgress();
@@ -197,9 +179,12 @@ async function initializeUserTables() {
         // Load user routine
         await loadUserRoutine();
 
+        console.log('User tables initialized successfully');
+
     } catch (error) {
         console.error('Error initializing user tables:', error);
-        showNotification('Error setting up user data', 'error');
+        showNotification('Error setting up user data: ' + error.message, 'error');
+        throw error;
     }
 }
 
@@ -843,7 +828,59 @@ async function pollForNewNotifications() {
     try {
         const lastCheck = userNotifications.length > 0 ? userNotifications[0].created_at : new Date(0).toISOString();
 
-        const { data: newNotifications, error } } = await supabaseClient
+        const { data: newNotifications, error } = await supabaseClient
+            .from('user_notifications')
+            .select('*')
+            .eq('user_id', currentUser.id)
+            .gt('created_at', lastCheck)
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        if (newNotifications && newNotifications.length > 0) {
+            userNotifications = [...newNotifications, ...userNotifications];
+            updateNotificationUI();
+            
+            // Show notification for new messages
+            newNotifications.forEach(notification => {
+                showNotification(notification.message, notification.type);
+            });
+        }
+
+    } catch (error) {
+        console.error('Error polling for notifications:', error);
+    }
+}
+
+async function updateDailyProgress(habitName, completed) {
+    if (!currentUser || !supabaseClient) return;
+
+    try {
+        const today = new Date().toISOString().split('T')[0];
+
+        const { data: existing, error: fetchError } = await supabaseClient
+            .from('daily_progress')
+            .select('*')
+            .eq('user_id', currentUser.id)
+            .eq('date', today)
+            .single();
+
+        const progressData = {
+            user_id: currentUser.id,
+            date: today,
+            [habitName]: completed,
+            updated_at: new Date().toISOString()
+        };
+
+        if (existing) {
+            const { error } = await supabaseClient
+                .from('daily_progress')
+                .update(progressData)
+                .eq('id', existing.id);
+
+            if (error) throw error;
+        } else {
+            const { error } = await supabaseClient
                 .from('daily_progress')
                 .insert([progressData]);
 
@@ -1177,95 +1214,235 @@ function showForgotPasswordModal() {
 }
 
 async function loadOrCreateUserProfile() {
-    if (!currentUser) return;
+    if (!currentUser) {
+        console.error('No current user available');
+        return;
+    }
 
     try {
-        const { data: profile, error } = await supabaseClient
+        console.log('Loading profile for user:', currentUser.id);
+        
+        // First, try to get existing profile
+        const { data: existingProfile, error: selectError } = await supabaseClient
             .from('profiles')
             .select('*')
             .eq('id', currentUser.id)
             .maybeSingle();
 
-        if (error && error.code !== 'PGRST116') {
-            throw error;
+        if (selectError && selectError.code !== 'PGRST116') {
+            console.error('Error fetching profile:', selectError);
+            throw selectError;
         }
 
-        if (!profile) {
-            // Create profile if it doesn't exist
-            console.log('No profile found, creating new profile...');
-            const profileData = {
-                id: currentUser.id,
-                email: currentUser.email,
-                name: currentUser.user_metadata?.name || currentUser.email?.split('@')[0],
-                created_at: new Date().toISOString(),
-                subscription_status: 'free',
-                join_date: new Date().toISOString(),
-                totp_enabled: false
-            };
+        if (existingProfile) {
+            console.log('Profile found:', existingProfile);
+            return existingProfile;
+        }
 
-            const { data: newProfile, error: createError } = await supabaseClient
-                .from('profiles')
-                .insert([profileData])
-                .select()
-                .single();
+        // Profile doesn't exist, create it
+        console.log('No profile found, creating new profile...');
+        
+        const profileData = {
+            id: currentUser.id,
+            email: currentUser.email,
+            name: currentUser.user_metadata?.name || currentUser.email?.split('@')[0] || 'User',
+            created_at: new Date().toISOString(),
+            subscription_status: 'free',
+            join_date: new Date().toISOString(),
+            totp_enabled: false,
+            updated_at: new Date().toISOString()
+        };
 
-            if (createError) {
-                console.error('Profile creation error:', createError);
-                throw new Error(`Failed to create profile: ${createError.message}`);
+        console.log('Creating profile with data:', profileData);
+
+        const { data: newProfile, error: createError } = await supabaseClient
+            .from('profiles')
+            .insert([profileData])
+            .select()
+            .single();
+
+        if (createError) {
+            console.error('Profile creation error:', createError);
+            
+            // If profile already exists due to trigger, try to fetch it again
+            if (createError.code === '23505') {
+                console.log('Profile might have been created by trigger, attempting to fetch...');
+                await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
+                
+                const { data: retryProfile, error: retryError } = await supabaseClient
+                    .from('profiles')
+                    .select('*')
+                    .eq('id', currentUser.id)
+                    .single();
+
+                if (retryError) {
+                    throw new Error(`Failed to fetch profile after creation: ${retryError.message}`);
+                }
+
+                console.log('Profile fetched after retry:', retryProfile);
+                return retryProfile;
             }
-
-            console.log('New profile created:', newProfile);
-            showNotification('Profile created successfully!', 'success');
-        } else {
-            console.log('Existing profile loaded:', profile);
+            
+            throw new Error(`Failed to create profile: ${createError.message}`);
         }
 
-        // Initialize other user data
-        await initializeUserTables();
+        console.log('New profile created successfully:', newProfile);
+        showNotification('Profile created successfully!', 'success');
+        return newProfile;
+
     } catch (error) {
-        console.error('Error loading/creating profile:', error);
-        showNotification('Failed to load profile: ' + error.message, 'error');
+        console.error('Error in loadOrCreateUserProfile:', error);
+        showNotification('Failed to load or create profile: ' + error.message, 'error');
         throw error;
     }
 }
 
 
 
-async function loadUserProfile() {
-    if (!currentUser) return null;
+// Notification UI Functions
+function updateNotificationUI() {
+    const notificationBell = document.getElementById('notificationBell');
+    const notificationBadge = document.getElementById('notificationBadge');
+    const notificationsList = document.getElementById('notificationsList');
+
+    if (!notificationBell || !currentUser) {
+        if (notificationBell) notificationBell.style.display = 'none';
+        return;
+    }
+
+    // Show notification bell when user is logged in
+    notificationBell.style.display = 'block';
+
+    // Update badge count
+    const unreadCount = userNotifications.filter(n => !n.is_read).length;
+    if (unreadCount > 0) {
+        notificationBadge.textContent = unreadCount;
+        notificationBadge.style.display = 'block';
+    } else {
+        notificationBadge.style.display = 'none';
+    }
+
+    // Update notifications list
+    if (notificationsList) {
+        if (userNotifications.length === 0) {
+            notificationsList.innerHTML = '<div class="no-notifications">No notifications yet</div>';
+        } else {
+            notificationsList.innerHTML = userNotifications.map(notification => `
+                <div class="notification-item ${notification.is_read ? 'read' : 'unread'}" onclick="markAsRead('${notification.id}')">
+                    <div class="notification-message">${notification.message}</div>
+                    <div class="notification-time">${formatNotificationTime(notification.created_at)}</div>
+                </div>
+            `).join('');
+        }
+    }
+}
+
+function toggleNotifications() {
+    const dropdown = document.getElementById('notificationDropdown');
+    if (dropdown) {
+        dropdown.classList.toggle('active');
+    }
+}
+
+async function markAsRead(notificationId) {
+    if (!currentUser || !supabaseClient) return;
 
     try {
-        // Add retry logic for profile loading
-        let retries = 3;
-        let profile = null;
+        const { error } = await supabaseClient
+            .from('user_notifications')
+            .update({ is_read: true })
+            .eq('id', notificationId)
+            .eq('user_id', currentUser.id);
 
-        while (retries > 0 && !profile) {
-            const { data, error } = await supabaseClient
-                .from('profiles')
-                .select('*')
-                .eq('id', currentUser.id)
-                .single();
+        if (error) throw error;
 
-            if (error) {
-                if (error.code === 'PGRST116') {
-                    console.log('No profile found for user, attempting to create...');
-                    // Try to create profile if it doesn't exist
-                    await createUserProfile(currentUser.email, currentUser.user_metadata?.name);
-                    retries--;
-                    await new Promise(resolve => setTimeout(resolve, 1500)); // Wait before retry
-                    continue;
-                }
-                throw error;
-            }
+        // Update local notifications
+        userNotifications = userNotifications.map(n => 
+            n.id === notificationId ? { ...n, is_read: true } : n
+        );
 
-            profile = data;
-            break;
+        updateNotificationUI();
+    } catch (error) {
+        console.error('Error marking notification as read:', error);
+    }
+}
+
+async function markAllAsRead() {
+    if (!currentUser || !supabaseClient) return;
+
+    try {
+        const { error } = await supabaseClient
+            .from('user_notifications')
+            .update({ is_read: true })
+            .eq('user_id', currentUser.id)
+            .eq('is_read', false);
+
+        if (error) throw error;
+
+        // Update local notifications
+        userNotifications = userNotifications.map(n => ({ ...n, is_read: true }));
+        updateNotificationUI();
+        
+        showNotification('All notifications marked as read', 'success');
+    } catch (error) {
+        console.error('Error marking all notifications as read:', error);
+    }
+}
+
+async function addWelcomeNotification() {
+    if (!currentUser || !supabaseClient) return;
+
+    try {
+        // Check if welcome notification already exists
+        const { data: existing, error: checkError } = await supabaseClient
+            .from('user_notifications')
+            .select('id')
+            .eq('user_id', currentUser.id)
+            .ilike('message', '%Welcome to MindCraft Academy%')
+            .limit(1);
+
+        if (checkError) throw checkError;
+
+        if (existing && existing.length > 0) {
+            console.log('Welcome notification already exists');
+            return;
         }
 
-        return profile;
+        // Create welcome notification
+        const welcomeNotification = {
+            user_id: currentUser.id,
+            message: `🎉 Welcome to MindCraft Academy! Start your transformation journey today.`,
+            type: 'success',
+            is_read: false,
+            created_at: new Date().toISOString()
+        };
+
+        const { error } = await supabaseClient
+            .from('user_notifications')
+            .insert([welcomeNotification]);
+
+        if (error) throw error;
+
+        // Add to local notifications
+        userNotifications.unshift(welcomeNotification);
+        updateNotificationUI();
+
     } catch (error) {
-        console.error('Error loading user profile:', error);
-        return null;
+        console.error('Error adding welcome notification:', error);
+    }
+}
+
+function formatNotificationTime(timestamp) {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffInHours = (now - date) / (1000 * 60 * 60);
+
+    if (diffInHours < 1) {
+        return 'Just now';
+    } else if (diffInHours < 24) {
+        return `${Math.floor(diffInHours)}h ago`;
+    } else {
+        return `${Math.floor(diffInHours / 24)}d ago`;
     }
 }
 

@@ -106,6 +106,109 @@ html {
     }
 }
 
+/* Notification Styles */
+.notification-bell {
+    position: relative;
+    cursor: pointer;
+    margin-right: 15px;
+    font-size: 1.2rem;
+    padding: 8px;
+    border-radius: 50%;
+    transition: background-color 0.3s ease;
+}
+
+.notification-bell:hover {
+    background-color: rgba(139, 69, 19, 0.1);
+}
+
+.notification-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background-color: #dc3545;
+    color: white;
+    font-size: 0.7rem;
+    padding: 2px 6px;
+    border-radius: 50%;
+    min-width: 18px;
+    text-align: center;
+}
+
+.notification-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    width: 300px;
+    max-height: 400px;
+    overflow-y: auto;
+    z-index: 1000;
+    display: none;
+}
+
+.notification-dropdown.active {
+    display: block;
+}
+
+.notification-header {
+    padding: 15px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 600;
+    color: #2c1810;
+}
+
+.mark-all-read {
+    color: #8b4513;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: normal;
+}
+
+.mark-all-read:hover {
+    text-decoration: underline;
+}
+
+.notification-item {
+    padding: 12px 15px;
+    border-bottom: 1px solid #f5f5f5;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.notification-item:hover {
+    background-color: #f8f9fa;
+}
+
+.notification-item.unread {
+    background-color: #fff3cd;
+    border-left: 3px solid #d4af37;
+}
+
+.notification-message {
+    color: #2c1810;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    margin-bottom: 5px;
+}
+
+.notification-time {
+    color: #8b4513;
+    font-size: 0.8rem;
+}
+
+.no-notifications {
+    padding: 20px;
+    text-align: center;
+    color: #8b4513;
+    font-style: italic;
+}
+
 /* Mobile responsive notifications */
 @media (max-width: 768px) {
     .notification {
@@ -116,15 +219,15 @@ html {
         max-width: none;
         transform: translateY(-100px);
     }
-    
+
     .notification.show {
         transform: translateY(0);
     }
-    
+
     .notification-content {
         padding: 14px 16px;
     }
-    
+
     .notification-message {
         font-size: 0.9rem;
     }
