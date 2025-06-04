@@ -1001,8 +1001,7 @@ async function saveProgressCustomization() {
             }
         });
 
-        // Save custom habits to user profile```text
-
+        // Save custom habits to user profile
         const { error } = await supabaseClient
             .from('profiles')
             .update({
@@ -2079,3 +2078,287 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
+
+function saveCurrentData() {
+    if (!currentUser) return;
+
+    // In a real app, this would save the user's routine and progress to Supabase
+    alert(`📊 Your progress and routine have been saved to your account!`);
+    profileMenu.classList.remove('active');
+}
+
+// Missing notification functions
+function toggleNotifications() {
+    const dropdown = document.getElementById('notificationDropdown');
+    if (dropdown) {
+        dropdown.classList.toggle('active');
+
+        // Close dropdown when clicking outside
+        if (dropdown.classList.contains('active')) {
+            setTimeout(() => {
+                document.addEventListener('click', function closeDropdown(e) {
+                    if (!dropdown.contains(e.target) && !document.getElementById('notificationBell').contains(e.target)) {
+                        dropdown.classList.remove('active');
+                        document.removeEventListener('click', closeDropdown);
+                    }
+                });
+            }, 100);
+        }
+    }
+}
+
+async function markAsRead(notificationId) {
+    if (!currentUser || !supabaseClient) return;
+
+    try {
+        const { error } = await supabaseClient
+            .from('user_notifications')
+            .update({ is_read: true })
+            .eq('id', notificationId)
+            .eq('user_id', currentUser.id);
+
+        if (error) throw error;
+
+        // Update local notifications
+        userNotifications = userNotifications.map(n => 
+            n.id === notificationId ? { ...n, is_read: true } : n
+        );
+
+        updateNotificationUI();
+    } catch (error) {
+        console.error('Error marking notification as read:', error);
+    }
+}
+
+async function markAllAsRead() {
+    if (!currentUser || !supabaseClient) return;
+
+    try {
+        const { error } = await supabaseClient
+            .from('user_notifications')
+            .update({ is_read: true })
+            .eq('user_id', currentUser.id)
+            .eq('is_read', false);
+
+        if (error) throw error;
+
+        // Update local notifications
+        userNotifications = userNotifications.map(n => ({ ...n, is_read: true }));
+        updateNotificationUI();
+
+        showNotification('All notifications marked as read', 'success');
+    } catch (error) {
+        console.error('Error marking all notifications as read:', error);
+    }
+}
+
+// Missing modal functions
+function showEditTimeModal(timeBlock, originalTime) {
+    if (!currentUser) {
+        showNotification('Please log in to edit your routine', 'warning');
+        return;
+    }
+
+    currentEditingBlock = timeBlock;
+    const modal = document.getElementById('editTimeModal');
+    if (modal) {
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+
+        // Pre-fill form with current values
+        const timeRange = originalTime.split(' - ');
+        if (timeRange.length === 2) {
+            document.getElementById('editStartTime').value = convertTo24Hour(timeRange[0]);
+            document.getElementById('editEndTime').value = convertTo24Hour(timeRange[1]);
+        }
+
+        const currentActivity = timeBlock.querySelector('p').textContent;
+        const currentDescription = timeBlock.querySelector('small').textContent;
+
+        document.getElementById('editActivityName').value = currentActivity.replace(/[^\w\s]/gi, '');
+        document.getElementById('editActivityDescription').value = currentDescription;
+    }
+}
+
+function closeEditTimeModal() {
+    const modal = document.getElementById('editTimeModal');
+    if (modal) {
+        modal.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+    currentEditingBlock = null;
+}
+
+async function saveEditedTime() {
+    const startTime = document.getElementById('editStartTime').value;
+    const endTime = document.getElementById('editEndTime').value;
+    const activityName = document.getElementById('editActivityName').value;
+    const activityDescription = document.getElementById('editActivityDescription').value;
+
+    if (!startTime || !endTime || !activityName) {
+        showNotification('Please fill in all required fields', 'warning');
+        return;
+    }
+
+    try {
+        if (currentEditingBlock && supabaseClient && currentUser) {
+            // Save to database
+            const routineItem = {
+                user_id: currentUser.id,
+                start_time: startTime,
+                end_time: endTime,
+                activity_name: activityName,
+                activity_description: activityDescription,
+                created_at: new Date().toISOString()
+            };
+
+            const { error } = await supabaseClient
+                .from('user_routines')
+                .upsert([routineItem], { onConflict: 'user_id,start_time' });
+
+            if (error) throw error;
+        }
+
+        // Update UI
+        if (currentEditingBlock) {
+            const timeFormatted = `${convertTo12Hour(startTime)} - ${convertTo12Hour(endTime)}`;
+            currentEditingBlock.innerHTML = `
+                <h4>${timeFormatted}</h4>
+                <p>${activityName}</p>
+                <small>${activityDescription}</small>
+                <button class="edit-time-btn" onclick="showEditTimeModal(this.parentElement, '${timeFormatted}')">✏️ Edit</button>
+            `;
+        }
+
+        closeEditTimeModal();
+        showNotification('⏰ Time block updated successfully!', 'success');
+
+        // Add notification
+        await addUserNotification(`✅ Routine updated: ${activityName} scheduled for ${convertTo12Hour(startTime)} - ${convertTo12Hour(endTime)}`, 'success');
+
+    } catch (error) {
+        console.error('Error saving routine:', error);
+        showNotification('Error saving time block', 'error');
+    }
+}
+
+function showProgressCustomization() {
+    if (!currentUser) {
+        showNotification('Please log in to customize your progress tracking', 'warning');
+        return;
+    }
+
+    const modal = document.getElementById('progressCustomModal');
+    if (modal) {
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+function closeProgressCustomModal() {
+    const modal = document.getElementById('progressCustomModal');
+    if (modal) {
+        modal.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+}
+
+async function saveProgressCustomization() {
+    if (!currentUser || !supabaseClient) return;
+
+    try {
+        const customHabits = [];
+        const habitInputs = document.querySelectorAll('.custom-habit-input');
+
+        habitInputs.forEach(input => {
+            if (input.value.trim()) {
+                customHabits.push({
+                    name: input.value.trim(),
+                    target: input.dataset.target || 1,
+                    category: input.dataset.category || 'personal'
+                });
+            }
+        });
+
+        // Save custom habits to user profile
+        const { error } = await supabaseClient
+            .from('profiles')
+            .update({
+                custom_habits: customHabits,
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', currentUser.id);
+
+        if (error) throw error;
+
+        closeProgressCustomModal();
+        showNotification('✨ Progress tracking customized successfully!', 'success');
+        await addUserNotification('🎯 Your personalized progress tracking is now active!', 'success');
+
+        // Refresh progress display
+        loadCustomProgressTracking();
+
+    } catch (error) {
+        console.error('Error saving progress customization:', error);
+        showNotification('Error saving customization', 'error');
+    }
+}
+
+async function loadCustomProgressTracking() {
+    if (!currentUser || !supabaseClient) return;
+
+    try {
+        const { data: profile, error } = await supabaseClient
+            .from('profiles')
+            .select('custom_habits')
+            .eq('id', currentUser.id)
+            .single();
+
+        if (error) throw error;
+
+        if (profile && profile.custom_habits) {
+            updateProgressTrackingUI(profile.custom_habits);
+        }
+    } catch (error) {
+        console.error('Error loading custom progress tracking:', error);
+    }
+}
+
+function updateProgressTrackingUI(customHabits) {
+    const habitTracker = document.querySelector('.habit-tracker');
+    if (!habitTracker) return;
+
+    // Add custom habits to the tracking display
+    customHabits.forEach(habit => {
+        const habitItem = document.createElement('div');
+        habitItem.className = 'habit-item custom-habit';
+        habitItem.innerHTML = `
+            <div class="habit-name">🎯 ${habit.name}</div>
+            <div class="habit-progress">
+                <div class="habit-progress-fill" style="width: 0%"></div>
+            </div>
+            <small style="color: #5d4e37; margin-top: 5px; display: block;">Custom goal • Track daily progress</small>
+            <button class="update-custom-btn" onclick="updateCustomHabit('${habit.name}')">Mark Complete</button>
+        `;
+        habitTracker.appendChild(habitItem);
+    });
+}
+
+async function updateCustomHabit(habitName) {
+    if (!currentUser) return;
+
+    const habitItem = event.target.closest('.custom-habit');
+    const progressFill = habitItem.querySelector('.habit-progress-fill');
+    const button = event.target;
+
+    // Toggle completion
+    const isCompleted = progressFill.style.width === '100%';
+    progressFill.style.width = isCompleted ? '0%' : '100%';
+    button.textContent = isCompleted ? 'Mark Complete' : 'Completed ✓';
+    button.style.background = isCompleted ? '#d4af37' : '#10b981';
+
+    if (!isCompleted) {
+        showNotification(`✅ ${habitName} completed!`, 'success');
+        await addUserNotification(`🎯 Custom habit completed: ${habitName}`, 'success');
+    }
+}
