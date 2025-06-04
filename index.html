@@ -1642,66 +1642,77 @@
                             <h4>5:30 - 6:00 AM</h4>
                             <p>🌅 Wake Up & Hydrate</p>
                             <small>Start with gratitude</small>
+                            <button class="edit-time-btn" onclick="event.stopPropagation(); showEditTimeModal(this.parentElement, '5:30 AM - 6:00 AM')">✏️ Edit</button>
                         </div>
 
                         <div class="time-block" onclick="selectBlock(this, '6:00 AM')">
                             <h4>6:00 - 6:30 AM</h4>
                             <p>🏃‍♂️ Movement & Energy</p>
                             <small>Exercise or stretch</small>
+                            <button class="edit-time-btn" onclick="event.stopPropagation(); showEditTimeModal(this.parentElement, '6:00 AM - 6:30 AM')">✏️ Edit</button>
                         </div>
 
                         <div class="time-block" onclick="selectBlock(this, '6:30 AM')">
                             <h4>6:30 - 7:00 AM</h4>
                             <p>🧘‍♀️ Mind Training</p>
                             <small>Meditation or journaling</small>
+                            <button class="edit-time-btn" onclick="event.stopPropagation(); showEditTimeModal(this.parentElement, '6:30 AM - 7:00 AM')">✏️ Edit</button>
                         </div>
 
                         <div class="time-block" onclick="selectBlock(this, '7:00 AM')">
                             <h4>7:00 - 8:00 AM</h4>
                             <p>📚 Learning Hour</p>
                             <small>Read or listen to audiobook</small>
+                            <button class="edit-time-btn" onclick="event.stopPropagation(); showEditTimeModal(this.parentElement, '7:00 AM - 8:00 AM')">✏️ Edit</button>
                         </div>
 
                         <div class="time-block" onclick="selectBlock(this, '8:00 AM')">
                             <h4>8:00 - 12:00 PM</h4>
                             <p>🎯 Deep Work Block</p>
                             <small>Most important tasks</small>
+                            <button class="edit-time-btn" onclick="event.stopPropagation(); showEditTimeModal(this.parentElement, '8:00 AM - 12:00 PM')">✏️ Edit</button>
                         </div>
 
                         <div class="time-block" onclick="selectBlock(this, '12:00 PM')">
                             <h4>12:00 - 1:00 PM</h4>
                             <p>🍽️ Mindful Break</p>
                             <small>Lunch & recharge</small>
+                            <button class="edit-time-btn" onclick="event.stopPropagation(); showEditTimeModal(this.parentElement, '12:00 PM - 1:00 PM')">✏️ Edit</button>
                         </div>
 
                         <div class="time-block" onclick="selectBlock(this, '1:00 PM')">
                             <h4>1:00 - 5:00 PM</h4>
                             <p>💼 Focused Work</p>
                             <small>Collaboration & tasks</small>
+                            <button class="edit-time-btn" onclick="event.stopPropagation(); showEditTimeModal(this.parentElement, '1:00 PM - 5:00 PM')">✏️ Edit</button>
                         </div>
 
                         <div class="time-block" onclick="selectBlock(this, '5:00 PM')">
                             <h4>5:00 - 6:00 PM</h4>
                             <p>🔄 Transition Time</p>
                             <small>Exercise or decompress</small>
+                            <button class="edit-time-btn" onclick="event.stopPropagation(); showEditTimeModal(this.parentElement, '5:00 PM - 6:00 PM')">✏️ Edit</button>
                         </div>
 
                         <div class="time-block" onclick="selectBlock(this, '6:00 PM')">
                             <h4>6:00 - 8:00 PM</h4>
                             <p>👥 Connection Time</p>
                             <small>Family, friends, hobbies</small>
+                            <button class="edit-time-btn" onclick="event.stopPropagation(); showEditTimeModal(this.parentElement, '6:00 PM - 8:00 PM')">✏️ Edit</button>
                         </div>
 
                         <div class="time-block" onclick="selectBlock(this, '8:00 PM')">
                             <h4>8:00 - 9:00 PM</h4>
                             <p>📝 Reflection</p>
                             <small>Plan tomorrow, gratitude</small>
+                            <button class="edit-time-btn" onclick="event.stopPropagation(); showEditTimeModal(this.parentElement, '8:00 PM - 9:00 PM')">✏️ Edit</button>
                         </div>
 
                         <div class="time-block" onclick="selectBlock(this, '9:00 PM')">
                             <h4>9:00 - 10:00 PM</h4>
                             <p>😴 Wind Down</p>
                             <small>Prepare for quality sleep</small>
+                            <button class="edit-time-btn" onclick="event.stopPropagation(); showEditTimeModal(this.parentElement, '9:00 PM - 10:00 PM')">✏️ Edit</button>
                         </div>
                     </div>
 
@@ -1817,7 +1828,12 @@
                     <h3 class="cta-title">Your Progress is Powerful</h3>
                     <p style="color: #5d4e37; margin-bottom: 30px;">Every small win compounds into extraordinary
                         transformation</p>
-                    <button class="cta-button" onclick="updateProgress()">Update Today's Progress</button>
+                    <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+                        <button class="cta-button" onclick="updateProgress()">Update Today's Progress</button>
+                        <button class="cta-button" onclick="showProgressCustomization()" style="background: linear-gradient(45deg, #8b4513, #d4af37);">
+                            🎯 Customize Tracking
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -2017,6 +2033,83 @@
     </div>
 
     
+
+    <!-- Edit Time Modal -->
+    <div class="auth-modal" id="editTimeModal">
+        <div class="auth-form">
+            <button class="close-modal" onclick="closeEditTimeModal()">&times;</button>
+            <h2 class="form-title">⏰ Edit Your Time Block</h2>
+            <div class="form-group">
+                <label for="editStartTime">Start Time</label>
+                <input type="time" id="editStartTime" class="form-input" required>
+            </div>
+            <div class="form-group">
+                <label for="editEndTime">End Time</label>
+                <input type="time" id="editEndTime" class="form-input" required>
+            </div>
+            <div class="form-group">
+                <label for="editActivityName">Activity</label>
+                <input type="text" id="editActivityName" class="form-input" placeholder="e.g., Morning Workout" required>
+            </div>
+            <div class="form-group">
+                <label for="editActivityDescription">Description</label>
+                <input type="text" id="editActivityDescription" class="form-input" placeholder="Brief description">
+            </div>
+            <button class="form-button" onclick="saveEditedTime()">Save Changes</button>
+        </div>
+    </div>
+
+    <!-- Progress Customization Modal -->
+    <div class="auth-modal" id="progressCustomModal">
+        <div class="auth-form" style="max-width: 600px;">
+            <button class="close-modal" onclick="closeProgressCustomModal()">&times;</button>
+            <h2 class="form-title">🎯 Customize Your Progress Tracking</h2>
+            <p style="color: #5d4e37; margin-bottom: 25px; text-align: center;">Add your personal goals and habits to track</p>
+            
+            <div style="background: #f9f6f0; padding: 20px; border-radius: 10px; margin-bottom: 25px;">
+                <h4 style="color: #2c1810; margin-bottom: 15px;">💡 Recommended Categories:</h4>
+                
+                <div class="form-group">
+                    <label>🧘 Mindfulness & Mental Health</label>
+                    <input type="text" class="form-input custom-habit-input" data-category="mindfulness" placeholder="e.g., 10 minutes meditation, journaling">
+                </div>
+                
+                <div class="form-group">
+                    <label>💪 Physical Health</label>
+                    <input type="text" class="form-input custom-habit-input" data-category="health" placeholder="e.g., 8 glasses of water, 30-min exercise">
+                </div>
+                
+                <div class="form-group">
+                    <label>🎯 Productivity & Skills</label>
+                    <input type="text" class="form-input custom-habit-input" data-category="productivity" placeholder="e.g., Learn new skill, complete priorities">
+                </div>
+                
+                <div class="form-group">
+                    <label>👥 Relationships & Social</label>
+                    <input type="text" class="form-input custom-habit-input" data-category="social" placeholder="e.g., Call family, help someone">
+                </div>
+                
+                <div class="form-group">
+                    <label>🌱 Personal Growth</label>
+                    <input type="text" class="form-input custom-habit-input" data-category="growth" placeholder="e.g., Practice gratitude, learn something new">
+                </div>
+            </div>
+
+            <div style="background: rgba(212, 175, 55, 0.1); padding: 15px; border-radius: 10px; margin-bottom: 20px;">
+                <p style="color: #2c1810; font-weight: 500; margin-bottom: 10px;">✨ Tips for Success:</p>
+                <ul style="color: #5d4e37; line-height: 1.6; margin-left: 20px;">
+                    <li>Start small - build momentum first</li>
+                    <li>Be specific - "10 push-ups" vs "exercise"</li>
+                    <li>Focus on 3-5 key habits maximum</li>
+                    <li>Track daily for best results</li>
+                </ul>
+            </div>
+
+            <button class="form-button" onclick="saveProgressCustomization()">
+                🚀 Save My Custom Tracking
+            </button>
+        </div>
+    </div>
 
     <!-- Notification Container -->
     <div id="notificationContainer" class="notification-container"></div>

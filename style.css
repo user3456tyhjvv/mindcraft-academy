@@ -761,6 +761,184 @@ html {
     margin-left: 8px;
 }
 
+/* Edit Time Button */
+.edit-time-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: rgba(212, 175, 55, 0.8);
+    border: none;
+    border-radius: 6px;
+    color: #2c1810;
+    padding: 4px 8px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    opacity: 0;
+    transform: scale(0.8);
+}
+
+.time-block {
+    position: relative;
+}
+
+.time-block:hover .edit-time-btn {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.edit-time-btn:hover {
+    background: #d4af37;
+    transform: scale(1.1);
+}
+
+/* Custom Habit Elements */
+.custom-habit {
+    border-left-color: #8b4513 !important;
+    background: linear-gradient(135deg, #fff, #f9f6f0);
+}
+
+.update-custom-btn {
+    background: #d4af37;
+    color: #2c1810;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 15px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: all 0.3s ease;
+}
+
+.update-custom-btn:hover {
+    background: #8b4513;
+    color: white;
+    transform: translateY(-1px);
+}
+
+.custom-habit-input {
+    margin-bottom: 10px;
+}
+
+.form-group label {
+    font-weight: 600;
+    color: #2c1810;
+    margin-bottom: 8px;
+    display: block;
+}
+
+/* Progress Customization Modal Enhancements */
+.auth-form h4 {
+    margin-bottom: 15px;
+    color: #2c1810;
+}
+
+.auth-form ul {
+    padding-left: 0;
+    list-style: none;
+}
+
+.auth-form ul li {
+    padding: 5px 0;
+    position: relative;
+    padding-left: 20px;
+}
+
+.auth-form ul li::before {
+    content: '•';
+    color: #d4af37;
+    font-weight: bold;
+    position: absolute;
+    left: 0;
+}
+
+/* Notification Bell Fix */
+.notification-bell {
+    background: rgba(255, 255, 255, 0.15);
+    border: none;
+    border-radius: 50%;
+    width: 45px;
+    height: 45px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: white;
+    font-size: 1.2rem;
+    position: relative;
+}
+
+.notification-bell:hover {
+    background: rgba(255, 255, 255, 0.25);
+    transform: scale(1.1);
+}
+
+/* Enhanced Time Block Styling */
+.time-block {
+    background: linear-gradient(45deg, #2c1810, #8b4513);
+    color: white;
+    padding: 20px;
+    border-radius: 15px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+    position: relative;
+    overflow: hidden;
+}
+
+.time-block::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.1), transparent);
+    transition: left 0.5s ease;
+}
+
+.time-block:hover::before {
+    left: 100%;
+}
+
+.time-block:hover {
+    transform: translateY(-5px);
+    border-color: #d4af37;
+    box-shadow: 0 10px 20px rgba(212, 175, 55, 0.3);
+}
+
+.time-block.selected {
+    background: linear-gradient(45deg, #d4af37, #f4e4a6);
+    color: #2c1810;
+    border-color: #8b4513;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .edit-time-btn {
+        opacity: 1;
+        position: relative;
+        top: auto;
+        right: auto;
+        margin-top: 10px;
+        display: block;
+        width: 100%;
+    }
+    
+    .time-block {
+        padding: 15px;
+    }
+    
+    .auth-form {
+        padding: 30px 20px;
+        margin: 20px;
+    }
+}
+
 /* Premium Content Styling */
 .premium-content {
     border: 2px solid #d4af37;
